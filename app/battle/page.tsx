@@ -5,6 +5,42 @@ import { useRouter } from 'next/navigation';
 import { useBattle } from '@/src/context/BattleContext';
 import { useTranslation } from 'react-i18next';
 
+const typeChart: Record<string, Record<string, number>> = {
+  normal: { rock: 0.5, ghost: 0, steel: 0.5 },
+  fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
+  water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
+  grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
+  electric: { water: 2, grass: 0.5, electric: 0.5, ground: 0, flying: 2, dragon: 0.5 },
+  ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
+  fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
+  poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 2 },
+  ground: { fire: 2, water: 1, grass: 0.5, electric: 2, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
+  flying: { grass: 2, electric: 0.5, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
+  psychic: { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
+  bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
+  rock: { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
+  ghost: { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
+  dragon: { dragon: 2, steel: 0.5, fairy: 0 },
+  dark: { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
+  steel: { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2 },
+  fairy: { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 }
+};
+
+const getMultiplier = (attackerTypes: any[], defenderTypes: any[]) => {
+  if (!attackerTypes || !defenderTypes) return 1;
+  let multiplier = 1;
+  const attackType = attackerTypes[0]?.type?.name;
+  if (!attackType) return 1;
+
+  defenderTypes.forEach(d => {
+    const dType = d.type.name;
+    if (typeChart[attackType] && typeChart[attackType][dType] !== undefined) {
+      multiplier *= typeChart[attackType][dType];
+    }
+  });
+  return multiplier;
+};
+
 export default function BattlePage() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -46,10 +82,14 @@ export default function BattlePage() {
       while (currentPHp > 0 && currentOHp > 0) {
         await wait(1000);
         // Player attacks
-        const damageToOpp = Math.max(1, Math.floor((playerAtk * 1.5) - oppDef));
+        const playerMultiplier = getMultiplier(playerPokemon.types, opponentPokemon.types);
+        const damageToOpp = Math.max(1, Math.floor(((playerAtk * 1.5) - oppDef) * playerMultiplier));
         currentOHp -= damageToOpp;
         setOppHp(currentOHp);
         battleLogs.push(t('{{name}} attacks! Dealt {{damage}} damage!', { name: playerPokemon.name, damage: damageToOpp }));
+        if (playerMultiplier > 1) battleLogs.push(t("It's super effective!"));
+        else if (playerMultiplier < 1 && playerMultiplier > 0) battleLogs.push(t("It's not very effective..."));
+        else if (playerMultiplier === 0) battleLogs.push(t("It had no effect!"));
         setLogs([...battleLogs]);
         
         if (currentOHp <= 0) {
@@ -61,10 +101,14 @@ export default function BattlePage() {
 
         await wait(1000);
         // Opponent attacks
-        const damageToPlayer = Math.max(1, Math.floor((oppAtk * 1.5) - playerDef));
+        const oppMultiplier = getMultiplier(opponentPokemon.types, playerPokemon.types);
+        const damageToPlayer = Math.max(1, Math.floor(((oppAtk * 1.5) - playerDef) * oppMultiplier));
         currentPHp -= damageToPlayer;
         setPlayerHp(currentPHp);
         battleLogs.push(t('Opponent {{name}} attacks! Dealt {{damage}} damage!', { name: opponentPokemon.name, damage: damageToPlayer }));
+        if (oppMultiplier > 1) battleLogs.push(t("It's super effective!"));
+        else if (oppMultiplier < 1 && oppMultiplier > 0) battleLogs.push(t("It's not very effective..."));
+        else if (oppMultiplier === 0) battleLogs.push(t("It had no effect!"));
         setLogs([...battleLogs]);
 
         if (currentPHp <= 0) {
@@ -107,6 +151,13 @@ export default function BattlePage() {
         {/* Player Pokemon */}
         <div className="relative w-full md:w-5/12 p-6 bg-gradient-to-b from-blue-100 to-blue-200 border-8 border-gray-800 rounded-3xl shadow-[8px_8px_0_rgba(0,0,0,0.2)] flex flex-col items-center">
           <h2 className="text-2xl font-black capitalize text-blue-900 mb-2 drop-shadow-sm">{playerPokemon.name}</h2>
+          <div className="flex flex-wrap justify-center gap-1 mb-4">
+            {playerPokemon.types.map((t: any) => (
+              <span key={t.type.name} className="px-2 py-1 bg-gray-800 text-white rounded shadow-sm text-[10px] font-bold uppercase tracking-wider">
+                {t.type.name}
+              </span>
+            ))}
+          </div>
           <div className="w-full mb-6 px-4 bg-white p-3 rounded-xl border-4 border-gray-800">
             <div className="flex justify-between text-sm font-black text-gray-800 mb-1">
               <span>HP</span>
@@ -142,6 +193,13 @@ export default function BattlePage() {
         {/* Opponent Pokemon */}
         <div className="relative w-full md:w-5/12 p-6 bg-gradient-to-b from-red-100 to-red-200 border-8 border-gray-800 rounded-3xl shadow-[8px_8px_0_rgba(0,0,0,0.2)] flex flex-col items-center">
           <h2 className="text-2xl font-black capitalize text-red-900 mb-2 drop-shadow-sm">{opponentPokemon.name}</h2>
+          <div className="flex flex-wrap justify-center gap-1 mb-4">
+            {opponentPokemon.types.map((t: any) => (
+              <span key={t.type.name} className="px-2 py-1 bg-gray-800 text-white rounded shadow-sm text-[10px] font-bold uppercase tracking-wider">
+                {t.type.name}
+              </span>
+            ))}
+          </div>
           <div className="w-full mb-6 px-4 bg-white p-3 rounded-xl border-4 border-gray-800">
             <div className="flex justify-between text-sm font-black text-gray-800 mb-1">
               <span>HP</span>

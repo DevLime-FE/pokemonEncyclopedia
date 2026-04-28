@@ -23,7 +23,10 @@ const resources = {
       "Attack": "공격",
       "Defense": "방어",
       "Speed": "스피드",
-      "Region Pokedex": "{{region}} 도감"
+      "Region Pokedex": "{{region}} 도감",
+      "It's super effective!": "효과가 굉장했다!",
+      "It's not very effective...": "효과가 별로인 듯하다...",
+      "It had no effect!": "효과가 없는 것 같다!"
     }
   },
   en: {
@@ -47,7 +50,10 @@ const resources = {
       "Attack": "Attack",
       "Defense": "Defense",
       "Speed": "Speed",
-      "Region Pokedex": "{{region}} Pokedex"
+      "Region Pokedex": "{{region}} Pokedex",
+      "It's super effective!": "It's super effective!",
+      "It's not very effective...": "It's not very effective...",
+      "It had no effect!": "It had no effect!"
     }
   },
   ja: {
@@ -71,7 +77,10 @@ const resources = {
       "Attack": "こうげき",
       "Defense": "ぼうぎょ",
       "Speed": "すばやさ",
-      "Region Pokedex": "{{region}} 図鑑"
+      "Region Pokedex": "{{region}} 図鑑",
+      "It's super effective!": "こうかは ばつぐんだ！",
+      "It's not very effective...": "こうかは いまひとつのようだ...",
+      "It had no effect!": "こうかがないみたいだ！"
     }
   }
 };
