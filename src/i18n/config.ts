@@ -26,7 +26,12 @@ const resources = {
       "Region Pokedex": "{{region}} 도감",
       "It's super effective!": "효과가 굉장했다!",
       "It's not very effective...": "효과가 별로인 듯하다...",
-      "It had no effect!": "효과가 없는 것 같다!"
+      "It had no effect!": "효과가 없는 것 같다!",
+      "Battle Start!": "배틀 시작!",
+      "{{name}} used {{move}}!": "{{name}}의 {{move}}!",
+      "Dealt {{damage}} damage!": "{{damage}}의 데미지를 입혔다!",
+      "Opponent {{name}} fainted! Player 1 wins!": "{{name}}은(는) 쓰러졌다! 플레이어 1 승리!",
+      "{{name}} fainted! Player 2 wins!": "{{name}}은(는) 쓰러졌다! 플레이어 2 승리!"
     }
   },
   en: {
@@ -53,7 +58,12 @@ const resources = {
       "Region Pokedex": "{{region}} Pokedex",
       "It's super effective!": "It's super effective!",
       "It's not very effective...": "It's not very effective...",
-      "It had no effect!": "It had no effect!"
+      "It had no effect!": "It had no effect!",
+      "Battle Start!": "Battle Start!",
+      "{{name}} used {{move}}!": "{{name}} used {{move}}!",
+      "Dealt {{damage}} damage!": "Dealt {{damage}} damage!",
+      "Opponent {{name}} fainted! Player 1 wins!": "{{name}} fainted! Player 1 wins!",
+      "{{name}} fainted! Player 2 wins!": "{{name}} fainted! Player 2 wins!"
     }
   },
   ja: {
@@ -80,7 +90,12 @@ const resources = {
       "Region Pokedex": "{{region}} 図鑑",
       "It's super effective!": "こうかは ばつぐんだ！",
       "It's not very effective...": "こうかは いまひとつのようだ...",
-      "It had no effect!": "こうかがないみたいだ！"
+      "It had no effect!": "こうかがないみたいだ！",
+      "Battle Start!": "バトル開始！",
+      "{{name}} used {{move}}!": "{{name}}の {{move}}！",
+      "Dealt {{damage}} damage!": "{{damage}}のダメージを与えた！",
+      "Opponent {{name}} fainted! Player 1 wins!": "{{name}}は倒れた！プレイヤー 1の勝利！",
+      "{{name}} fainted! Player 2 wins!": "{{name}}は倒れた！プレイヤー 2の勝利！"
     }
   }
 };

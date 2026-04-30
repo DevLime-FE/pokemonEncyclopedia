@@ -11,6 +11,27 @@ export interface PokemonType {
   };
 }
 
+export interface PokemonMove {
+  move: {
+    name: string;
+    url: string;
+  };
+}
+
+export interface MoveDetails {
+  id: number;
+  name: string;
+  accuracy: number | null;
+  power: number | null;
+  type: {
+    name: string;
+  };
+  names: {
+    language: { name: string };
+    name: string;
+  }[];
+}
+
 export interface Pokemon {
   id: number;
   name: string;
@@ -20,6 +41,7 @@ export interface Pokemon {
   };
   stats: PokemonStat[];
   types: PokemonType[];
+  moves: PokemonMove[];
 }
 
 export interface PokedexEntry {
@@ -65,4 +87,48 @@ export async function getPokemon(nameOrId: string | number): Promise<Pokemon> {
   const res = await fetch(`${API_BASE}/pokemon/${nameOrId}`);
   if (!res.ok) throw new Error('Failed to fetch pokemon details');
   return await res.json();
+}
+
+export async function getRandomMoves(movesList: PokemonMove[], count: number = 4): Promise<MoveDetails[]> {
+  if (!movesList || movesList.length === 0) return [];
+  
+  const shuffled = [...movesList].sort(() => 0.5 - Math.random());
+  const selectedMoves: MoveDetails[] = [];
+  
+  // Batch fetch to speed things up, since sequential fetching of 10-20 moves can be slow.
+  // We'll take first 15 random moves, fetch them in parallel, filter power > 0, then take up to `count`.
+  const candidates = shuffled.slice(0, 15);
+  const fetchPromises = candidates.map(async (item) => {
+    try {
+      const res = await fetch(item.move.url);
+      if (res.ok) {
+        const data: MoveDetails = await res.json();
+        return data;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  });
+
+  const results = await Promise.all(fetchPromises);
+  for (const data of results) {
+    if (data && data.power && data.power > 0) {
+      selectedMoves.push(data);
+      if (selectedMoves.length >= count) break;
+    }
+  }
+  
+  if (selectedMoves.length === 0) {
+    selectedMoves.push({
+      id: 165,
+      name: 'struggle',
+      power: 50,
+      accuracy: 100,
+      type: { name: 'normal' },
+      names: [{ language: { name: 'ko' }, name: '발버둥' }, { language: { name: 'en' }, name: 'Struggle' }, { language: { name: 'ja' }, name: 'わるあがき' }]
+    });
+  }
+  
+  return selectedMoves;
 }

@@ -44,10 +44,23 @@ export default function RegionPage() {
 
   const handleSelect = async (entry: PokedexEntry) => {
     const pkmn = await fetchPokemonDetails(entry.pokemon_species.name);
+    
+    if (selectedPlayer?.name === pkmn.name) {
+      setSelectedPlayer(null);
+      setPlayerPokemon(null);
+      return;
+    }
+    
+    if (selectedOpponent?.name === pkmn.name) {
+      setSelectedOpponent(null);
+      setOpponentPokemon(null);
+      return;
+    }
+
     if (!selectedPlayer) {
       setSelectedPlayer(pkmn);
       setPlayerPokemon(pkmn);
-    } else if (!selectedOpponent && selectedPlayer.name !== pkmn.name) {
+    } else if (!selectedOpponent) {
       setSelectedOpponent(pkmn);
       setOpponentPokemon(pkmn);
     }
