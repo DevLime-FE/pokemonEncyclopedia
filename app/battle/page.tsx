@@ -218,14 +218,14 @@ export default function BattlePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <h1 className="text-4xl md:text-5xl font-black text-center mb-10 text-yellow-400 drop-shadow-[0_4px_4px_rgba(59,76,202,0.8)]" style={{ WebkitTextStroke: '2px #3B4CCA' }}>
+      <h1 className="text-4xl md:text-5xl font-mono uppercase tracking-widest text-center mb-10 text-yellow-400" style={{ textShadow: '4px 4px 0px #3B4CCA, -2px -2px 0px #3B4CCA, 2px -2px 0px #3B4CCA, -2px 2px 0px #3B4CCA, 2px 2px 0px #3B4CCA' }}>
         {t('Battle Arena')}
       </h1>
       
       {/* Player 1 & 2 Turn indicator */}
       {!battleOver && !loadingMoves && (
         <div className="flex justify-center mb-6">
-          <div className={`px-6 py-2 rounded-full font-black text-white text-xl shadow-lg border-4 ${currentTurn === 'player1' ? 'bg-blue-500 border-blue-700' : 'bg-red-500 border-red-700'} animate-bounce`}>
+          <div className={`px-6 py-2 font-mono uppercase text-white text-xl shadow-[6px_6px_0_0_rgba(0,0,0,1)] border-4 ${currentTurn === 'player1' ? 'bg-blue-500 border-black' : 'bg-red-500 border-black'} animate-bounce`}>
             {activePlayerName} Turn!
           </div>
         </div>
@@ -234,23 +234,23 @@ export default function BattlePage() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
         
         {/* Player 1 Pokemon */}
-        <div className={`relative w-full md:w-5/12 p-6 bg-gradient-to-b from-blue-100 to-blue-200 border-8 ${currentTurn === 'player1' && !battleOver ? 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)]' : 'border-gray-800 shadow-[8px_8px_0_rgba(0,0,0,0.2)]'} rounded-3xl transition-all flex flex-col items-center`}>
-          <h2 className="text-2xl font-black capitalize text-blue-900 mb-2 drop-shadow-sm">{playerPokemon.name}</h2>
+        <div className={`relative w-full md:w-5/12 p-6 bg-white border-4 ${currentTurn === 'player1' && !battleOver ? 'border-black shadow-[8px_8px_0_0_#2563eb] -translate-y-2 -translate-x-2' : 'border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)]'} transition-all flex flex-col items-center`}>
+          <h2 className="text-xl font-mono uppercase text-black mb-2 tracking-widest">{playerPokemon.name}</h2>
           <div className="flex flex-wrap justify-center gap-1 mb-4">
             {playerPokemon.types.map((t: any) => (
-              <span key={t.type.name} className="px-2 py-1 bg-gray-800 text-white rounded shadow-sm text-[10px] font-bold uppercase tracking-wider">
+              <span key={t.type.name} className="px-2 py-1 bg-black text-white text-[8px] font-mono uppercase tracking-wider border-2 border-black">
                 {t.type.name}
               </span>
             ))}
           </div>
-          <div className="w-full mb-6 px-4 bg-white p-3 rounded-xl border-4 border-gray-800">
-            <div className="flex justify-between text-sm font-black text-gray-800 mb-1">
+          <div className="w-full mb-6 px-4 bg-gray-100 p-3 border-4 border-black">
+            <div className="flex justify-between text-xs font-mono uppercase text-black mb-1">
               <span>HP</span>
               <span>{Math.max(0, playerHp)} / {maxPlayerHp}</span>
             </div>
-            <div className="w-full bg-gray-300 rounded-full h-4 border-2 border-gray-600 overflow-hidden">
+            <div className="w-full bg-white border-4 border-black h-6 overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ${getHpColor(getHpPercentage(playerHp, maxPlayerHp))}`} 
+                className={`h-full transition-all duration-500 ${getHpColor(getHpPercentage(playerHp, maxPlayerHp))}`} 
                 style={{ width: `${getHpPercentage(playerHp, maxPlayerHp)}%` }}>
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function BattlePage() {
           <div className="relative">
             <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-8 bg-black opacity-20 rounded-[50%] blur-sm"></div>
             <img 
-              src={playerPokemon.sprites.back_default || playerPokemon.sprites.front_default} 
+              src={playerPokemon.sprites.front_default} 
               alt={playerPokemon.name} 
               className={`relative w-48 h-48 scale-x-[-1] drop-shadow-xl ${currentTurn === 'player1' ? 'animate-pulse' : ''}`}
               style={{ imageRendering: 'pixelated' }}
@@ -267,26 +267,26 @@ export default function BattlePage() {
           </div>
         </div>
 
-        <div className="text-6xl font-black italic text-yellow-400 drop-shadow-[0_4px_4px_rgba(238,21,21,0.8)]" style={{ WebkitTextStroke: '2px #EE1515' }}>VS</div>
+        <div className="text-4xl sm:text-6xl font-mono italic text-yellow-400" style={{ textShadow: '4px 4px 0px #EE1515, -2px -2px 0px #EE1515, 2px -2px 0px #EE1515, -2px 2px 0px #EE1515, 2px 2px 0px #EE1515' }}>VS</div>
 
         {/* Player 2 Pokemon */}
-        <div className={`relative w-full md:w-5/12 p-6 bg-gradient-to-b from-red-100 to-red-200 border-8 ${currentTurn === 'player2' && !battleOver ? 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'border-gray-800 shadow-[8px_8px_0_rgba(0,0,0,0.2)]'} rounded-3xl transition-all flex flex-col items-center`}>
-          <h2 className="text-2xl font-black capitalize text-red-900 mb-2 drop-shadow-sm">{opponentPokemon.name}</h2>
+        <div className={`relative w-full md:w-5/12 p-6 bg-white border-4 ${currentTurn === 'player2' && !battleOver ? 'border-black shadow-[8px_8px_0_0_#dc2626] -translate-y-2 -translate-x-2' : 'border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)]'} transition-all flex flex-col items-center`}>
+          <h2 className="text-xl font-mono uppercase text-black mb-2 tracking-widest">{opponentPokemon.name}</h2>
           <div className="flex flex-wrap justify-center gap-1 mb-4">
             {opponentPokemon.types.map((t: any) => (
-              <span key={t.type.name} className="px-2 py-1 bg-gray-800 text-white rounded shadow-sm text-[10px] font-bold uppercase tracking-wider">
+              <span key={t.type.name} className="px-2 py-1 bg-black text-white text-[8px] font-mono uppercase tracking-wider border-2 border-black">
                 {t.type.name}
               </span>
             ))}
           </div>
-          <div className="w-full mb-6 px-4 bg-white p-3 rounded-xl border-4 border-gray-800">
-            <div className="flex justify-between text-sm font-black text-gray-800 mb-1">
+          <div className="w-full mb-6 px-4 bg-gray-100 p-3 border-4 border-black">
+            <div className="flex justify-between text-xs font-mono uppercase text-black mb-1">
               <span>HP</span>
               <span>{Math.max(0, oppHp)} / {maxOppHp}</span>
             </div>
-            <div className="w-full bg-gray-300 rounded-full h-4 border-2 border-gray-600 overflow-hidden">
+            <div className="w-full bg-white border-4 border-black h-6 overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ${getHpColor(getHpPercentage(oppHp, maxOppHp))}`} 
+                className={`h-full transition-all duration-500 ${getHpColor(getHpPercentage(oppHp, maxOppHp))}`} 
                 style={{ width: `${getHpPercentage(oppHp, maxOppHp)}%` }}>
               </div>
             </div>
@@ -307,24 +307,24 @@ export default function BattlePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Retro Gameboy Log Box */}
-        <div ref={logBoxRef} className="bg-[#e0f8d0] text-gray-900 p-6 rounded-xl shadow-inner font-mono overflow-y-auto h-64 border-8 border-gray-800 relative z-10 scroll-smooth" style={{ boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)' }}>
+        <div ref={logBoxRef} className="bg-[#e0f8d0] text-black p-6 shadow-inner font-mono overflow-y-auto h-64 border-8 border-black relative z-10 scroll-smooth" style={{ boxShadow: 'inset 4px 4px 0px rgba(0,0,0,0.2)' }}>
           {logs.map((log, i) => (
-            <p key={i} className="mb-4 text-sm md:text-base leading-loose" style={{ textShadow: '1px 1px 0px rgba(0,0,0,0.2)' }}>▶ {log}</p>
+            <p key={i} className="mb-4 text-xs sm:text-sm leading-loose uppercase">▶ {log}</p>
           ))}
-          {isProcessing && !battleOver && <p className="mb-4 text-sm md:text-base text-gray-500 animate-bounce">▶ ...</p>}
+          {isProcessing && !battleOver && <p className="mb-4 text-xs sm:text-sm text-gray-700 animate-pulse uppercase">▶ ...</p>}
         </div>
 
         {/* Move Control Panel */}
-        <div className="bg-gray-800 p-6 rounded-xl border-8 border-gray-900 shadow-xl flex flex-col justify-center">
+        <div className="bg-white p-6 border-8 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] flex flex-col justify-center">
           {loadingMoves ? (
             <div className="flex justify-center items-center h-full">
-              <span className="text-white font-mono animate-pulse">{t('Loading moves...')}</span>
+              <span className="text-black font-mono animate-pulse uppercase">{t('Loading moves...')}</span>
             </div>
           ) : battleOver ? (
             <div className="flex justify-center items-center h-full">
                <button 
                 onClick={() => { resetBattle(); router.push('/'); }}
-                className="w-full py-6 bg-yellow-400 text-gray-900 font-black text-2xl rounded-xl hover:bg-yellow-300 transition transform hover:scale-105 border-4 border-gray-700 shadow-[4px_4px_0_rgba(0,0,0,0.5)] tracking-wider"
+                className="w-full py-6 bg-yellow-400 text-black font-mono uppercase text-xl sm:text-2xl hover:bg-yellow-300 transition transform hover:-translate-y-1 hover:-translate-x-1 border-4 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] active:shadow-none active:translate-x-[6px] active:translate-y-[6px]"
               >
                 {t('Play Again')}
               </button>
@@ -336,10 +336,10 @@ export default function BattlePage() {
                   key={`${move.name}-${idx}`}
                   disabled={isProcessing}
                   onClick={() => executeTurn(move)}
-                  className={`relative p-4 rounded-xl border-4 border-gray-900 shadow-[4px_4px_0_rgba(0,0,0,0.5)] text-left transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${typeColors[move.type.name] || 'bg-gray-300 text-black'}`}
+                  className={`relative p-4 border-4 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] text-left transition-transform transform hover:-translate-y-1 hover:-translate-x-1 active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed ${typeColors[move.type.name] || 'bg-gray-300 text-black'}`}
                 >
-                  <div className="font-black text-lg sm:text-xl drop-shadow-sm mb-1 line-clamp-1">{getLocalizedMoveName(move)}</div>
-                  <div className="flex justify-between text-xs font-bold opacity-80 uppercase tracking-widest">
+                  <div className="font-mono uppercase text-xs sm:text-sm mb-2 line-clamp-1">{getLocalizedMoveName(move)}</div>
+                  <div className="flex justify-between text-[10px] font-mono opacity-90 uppercase tracking-widest">
                     <span>{move.type.name}</span>
                     <span>PWR {move.power || '--'}</span>
                   </div>

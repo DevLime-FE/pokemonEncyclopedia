@@ -70,78 +70,165 @@ export default function RegionPage() {
     router.push('/battle');
   };
 
+  const getRegionTheme = (region: string) => {
+    switch (region.toLowerCase()) {
+      case 'kanto': return 'bg-green-300';
+      case 'johto': return 'bg-yellow-200';
+      case 'hoenn': return 'bg-blue-300';
+      case 'sinnoh': return 'bg-slate-300';
+      case 'unova': return 'bg-gray-400';
+      case 'kalos': return 'bg-pink-200';
+      case 'alola': return 'bg-teal-200';
+      case 'galar': return 'bg-red-300';
+      case 'paldea': return 'bg-orange-300';
+      default: return 'bg-blue-100';
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-black mb-8 capitalize text-center text-gray-800 drop-shadow-sm">{t('Region Pokedex', { region: regionName })}</h1>
-      
-      <div className="bg-red-600 p-2 rounded-2xl shadow-2xl mb-8 sticky top-4 z-50 border-4 border-gray-800">
-        <div className="bg-gray-900 p-4 rounded-xl border-4 border-gray-700 text-white flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex-1 w-full">
-            <h2 className="font-mono text-xl mb-3 text-yellow-400 flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-400 animate-pulse"></div>
-              {t('Battle Setup')}
-            </h2>
-            <div className="grid grid-cols-2 gap-4 bg-gray-800 p-3 rounded-lg border-2 border-gray-600 font-mono text-sm">
-              <div className="flex flex-col">
-                <span className="text-gray-400 mb-1">{t('Player 1')}</span>
-                {selectedPlayer ? <span className="font-bold capitalize text-blue-400 text-lg">{selectedPlayer.name}</span> : <span className="text-gray-500">{t('Select below')}</span>}
+    <div 
+      className={`min-h-screen ${getRegionTheme(regionName)}`}
+      style={{ backgroundImage: 'radial-gradient(#00000022 2px, transparent 2px)', backgroundSize: '24px 24px' }}
+    >
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl sm:text-4xl font-mono uppercase tracking-widest mb-8 text-center text-black" style={{ textShadow: '2px 2px 0px white' }}>{t('Region Pokedex', { region: regionName })}</h1>
+        
+        <div className="bg-[#dc0a2d] p-4 sm:p-6 mb-8 sticky top-4 z-50 border-[6px] border-black rounded-2xl shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex-1 w-full">
+              
+              {/* Top Pokedex Lights */}
+              <div className="flex items-center gap-3 mb-6 border-b-4 border-black pb-4">
+                <div className="w-12 h-12 bg-[#28aafd] border-4 border-black rounded-full shadow-[inset_-4px_-4px_0_0_rgba(0,0,0,0.3)] relative flex items-start justify-start p-1">
+                   <div className="w-3 h-3 bg-white rounded-full opacity-60"></div>
+                </div>
+                <div className="w-4 h-4 bg-red-500 border-2 border-black rounded-full shadow-inner"></div>
+                <div className="w-4 h-4 bg-yellow-400 border-2 border-black rounded-full shadow-inner"></div>
+                <div className="w-4 h-4 bg-green-500 border-2 border-black rounded-full shadow-inner"></div>
+                <h2 className="font-mono text-white text-xl sm:text-2xl ml-auto uppercase tracking-widest" style={{ textShadow: '2px 2px 0px black' }}>{t('Battle Setup')}</h2>
               </div>
-              <div className="flex flex-col">
-                <span className="text-gray-400 mb-1">{t('Player 2')}</span>
-                {selectedOpponent ? <span className="font-bold capitalize text-red-400 text-lg">{selectedOpponent.name}</span> : <span className="text-gray-500">{t('Select below')}</span>}
+
+              {/* Pokedex Inner Screen Container */}
+              <div className="bg-[#dedede] p-4 border-[6px] border-black rounded-lg shadow-[inset_4px_4px_0_0_rgba(0,0,0,0.2)]">
+                <div className="bg-[#232323] p-2 rounded-t-lg flex justify-center gap-4">
+                  <div className="w-3 h-3 bg-red-500 border-2 border-black rounded-full shadow-inner"></div>
+                  <div className="w-3 h-3 bg-red-500 border-2 border-black rounded-full shadow-inner"></div>
+                </div>
+                
+                {/* LCD Screen */}
+                <div className="bg-[#98cb98] grid grid-cols-2 p-6 border-x-4 border-black font-mono text-xs sm:text-sm overflow-hidden relative min-h-[220px] shadow-[inset_4px_4px_0_0_rgba(0,0,0,0.2)]">
+                  
+                  {/* Pokedex Screen Watermark */}
+                  <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(0,0,0,0.1)_1px,_transparent_1px)]" style={{ backgroundSize: '100% 4px' }}></div>
+
+                  {/* Player 1 Screen */}
+                  <div className="flex flex-col items-center z-10 border-r-4 border-black/20 pr-4">
+                    <span className="text-black font-bold mb-6 uppercase bg-white/50 border-2 border-black px-4 py-1 rounded-full">{t('Player 1')}</span>
+                    <div key={selectedPlayer?.name || 'empty-p1'} className={`relative w-16 h-16 flex items-center justify-center mb-6 ${selectedPlayer ? 'animate-throw-left' : ''}`}>
+                      {/* Real Poke Ball Sprite - Top Half */}
+                      <div className="absolute inset-0 origin-bottom" style={{ zIndex: selectedPlayer ? 10 : 20, clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 50%)', animation: selectedPlayer ? 'openTop 0.3s ease-out 1.0s both' : 'none' }}>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" className="w-full h-full drop-shadow-md" style={{ imageRendering: 'pixelated' }} alt="pokeball top" />
+                      </div>
+                      {/* Real Poke Ball Sprite - Bottom Half */}
+                      <div className="absolute inset-0 origin-top" style={{ zIndex: 20, clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)', animation: selectedPlayer ? 'openBottom 0.3s ease-out 1.0s both' : 'none' }}>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" className="w-full h-full drop-shadow-md" style={{ imageRendering: 'pixelated' }} alt="pokeball bottom" />
+                      </div>
+                      
+                      {/* Pokemon Sprite - Huge Size! */}
+                      {selectedPlayer && (
+                        <div className="absolute z-30" style={{ animation: 'popOut 0.4s ease-out 1.3s both', top: '-70px' }}>
+                          <img src={selectedPlayer.sprites.front_default} className="w-40 h-40 max-w-none object-contain drop-shadow-[4px_4px_0_rgba(0,0,0,0.3)] animate-bounce" style={{ imageRendering: 'pixelated' }} alt={selectedPlayer.name} />
+                        </div>
+                      )}
+                    </div>
+                    {selectedPlayer ? <span className="font-bold uppercase text-black bg-white/80 px-4 py-2 border-2 border-black rounded-lg shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] mt-auto animate-pulse">{selectedPlayer.name}</span> : <span className="text-black/50 text-xs mt-auto border-2 border-dashed border-black/30 px-3 py-1 rounded-lg">{t('Select below')}</span>}
+                  </div>
+
+                  {/* Player 2 Screen */}
+                  <div className="flex flex-col items-center z-10 pl-4">
+                    <span className="text-black font-bold mb-6 uppercase bg-white/50 border-2 border-black px-4 py-1 rounded-full">{t('Player 2')}</span>
+                    <div key={selectedOpponent?.name || 'empty-p2'} className={`relative w-16 h-16 flex items-center justify-center mb-6 ${selectedOpponent ? 'animate-throw-right' : ''}`}>
+                      {/* Real Poke Ball Sprite - Top Half */}
+                      <div className="absolute inset-0 origin-bottom" style={{ zIndex: selectedOpponent ? 10 : 20, clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 50%)', animation: selectedOpponent ? 'openTop 0.3s ease-out 1.0s both' : 'none' }}>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" className="w-full h-full drop-shadow-md" style={{ imageRendering: 'pixelated' }} alt="pokeball top" />
+                      </div>
+                      {/* Real Poke Ball Sprite - Bottom Half */}
+                      <div className="absolute inset-0 origin-top" style={{ zIndex: 20, clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)', animation: selectedOpponent ? 'openBottom 0.3s ease-out 1.0s both' : 'none' }}>
+                        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" className="w-full h-full drop-shadow-md" style={{ imageRendering: 'pixelated' }} alt="pokeball bottom" />
+                      </div>
+                      
+                      {/* Pokemon Sprite - Huge Size! */}
+                      {selectedOpponent && (
+                        <div className="absolute z-30" style={{ animation: 'popOut 0.4s ease-out 1.3s both', top: '-70px' }}>
+                          <img src={selectedOpponent.sprites.front_default} className="w-40 h-40 max-w-none object-contain drop-shadow-[4px_4px_0_rgba(0,0,0,0.3)] animate-bounce" style={{ imageRendering: 'pixelated' }} alt={selectedOpponent.name} />
+                        </div>
+                      )}
+                    </div>
+                    {selectedOpponent ? <span className="font-bold uppercase text-black bg-white/80 px-4 py-2 border-2 border-black rounded-lg shadow-[4px_4px_0_0_rgba(0,0,0,0.2)] mt-auto animate-pulse">{selectedOpponent.name}</span> : <span className="text-black/50 text-xs mt-auto border-2 border-dashed border-black/30 px-3 py-1 rounded-lg">{t('Select below')}</span>}
+                  </div>
+
+                </div>
+                
+                <div className="bg-[#232323] p-3 rounded-b-lg flex justify-between items-center px-6">
+                  <div className="w-5 h-5 bg-red-500 rounded-full border-2 border-black shadow-[inset_-2px_-2px_0_0_rgba(0,0,0,0.4)]"></div>
+                  <div className="flex gap-3">
+                    <div className="w-8 h-2 bg-black rounded-full shadow-inner"></div>
+                    <div className="w-8 h-2 bg-black rounded-full shadow-inner"></div>
+                  </div>
+                </div>
               </div>
+
+            </div>
+            
+            <div className="w-full md:w-auto flex flex-col items-center gap-4 mt-4 md:mt-0">
+              <button 
+                disabled={!selectedPlayer || !selectedOpponent}
+                onClick={startGame}
+                className="w-full px-8 py-6 bg-[#28aafd] text-white font-mono uppercase text-xl sm:text-2xl rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-400 transition-transform transform hover:-translate-y-1 hover:-translate-x-1 border-[6px] border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] active:shadow-none active:translate-x-[8px] active:translate-y-[8px]"
+              >
+                {t('Start Battle!')}
+              </button>
             </div>
           </div>
-          <button 
-            disabled={!selectedPlayer || !selectedOpponent}
-            onClick={startGame}
-            className="w-full md:w-auto px-8 py-4 bg-yellow-400 text-gray-900 font-black text-xl rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-yellow-300 transition-transform transform hover:scale-105 border-4 border-gray-800 shadow-[4px_4px_0_rgba(0,0,0,0.3)]"
-          >
-            {t('Start Battle!')}
-          </button>
         </div>
-      </div>
 
-      {loading ? (
-        <p className="text-center text-gray-500">{t('Loading Pokedex...')}</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {entries.map((entry) => {
-            // Ideally we initially fetch all or lazy load. For simplicity we assume PokemonCard can take minimal info or we fetch on demand.
-            // But we need the sprite. We will use a fallback image from raw github if it's not loaded, or fetch all.
-            // Oh actually, PokeAPI has a stable URL for sprites based on ID.
-            // PokedexEntry has entry_number or pokemon_species.url which has ID.
-            const urlParts = entry.pokemon_species.url.split('/');
-            const id = urlParts[urlParts.length - 2];
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
-            
-            const isPlayer = selectedPlayer?.name === entry.pokemon_species.name;
-            const isOpponent = selectedOpponent?.name === entry.pokemon_species.name;
-            const isSelected = isPlayer || isOpponent;
-            
-            return (
-              <div 
-                key={entry.pokemon_species.name}
-                onClick={() => handleSelect(entry)}
-                className={`relative p-3 rounded-2xl border-4 transition-all duration-300 cursor-pointer overflow-hidden group ${
-                  isPlayer 
-                    ? 'border-blue-500 bg-blue-50 shadow-[0_0_15px_rgba(59,130,246,0.5)] transform scale-105 z-10' 
-                    : isOpponent 
-                      ? 'border-red-500 bg-red-50 shadow-[0_0_15px_rgba(239,68,68,0.5)] transform scale-105 z-10' 
-                      : 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-xl hover:-translate-y-2'
-                }`}
-              >
-                <div className="flex justify-center mb-2 bg-gray-100 rounded-xl m-1 border-2 border-gray-200 group-hover:bg-blue-50 transition-colors">
-                  <img src={spriteUrl} alt={entry.pokemon_species.name} className="w-20 h-20 drop-shadow-md" style={{ imageRendering: 'pixelated' }} />
+        {loading ? (
+          <p className="text-center font-mono text-xl text-black bg-white inline-block px-8 py-3 rounded-full border-4 border-black shadow-[4px_4px_0_0_#000] animate-pulse">{t('Loading Pokedex...')}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {entries.map((entry) => {
+              const urlParts = entry.pokemon_species.url.split('/');
+              const id = urlParts[urlParts.length - 2];
+              const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+              
+              const isPlayer = selectedPlayer?.name === entry.pokemon_species.name;
+              const isOpponent = selectedOpponent?.name === entry.pokemon_species.name;
+              
+              return (
+                <div 
+                  key={entry.pokemon_species.name}
+                  onClick={() => handleSelect(entry)}
+                  className={`relative p-3 border-4 border-black rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden group ${
+                    isPlayer 
+                      ? 'bg-blue-100 shadow-[6px_6px_0_0_#2563eb] -translate-y-2 -translate-x-2 z-10 scale-105' 
+                      : isOpponent 
+                        ? 'bg-red-100 shadow-[6px_6px_0_0_#dc2626] -translate-y-2 -translate-x-2 z-10 scale-105' 
+                        : 'bg-white shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_#000] hover:-translate-y-1 hover:-translate-x-1 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex justify-center mb-3 bg-gradient-to-b from-gray-100 to-gray-200 border-2 border-black rounded-xl overflow-hidden group-hover:from-blue-50 group-hover:to-blue-100 transition-colors relative">
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_#000_1px,_transparent_1px)]" style={{ backgroundSize: '8px 8px' }}></div>
+                    <img src={spriteUrl} alt={entry.pokemon_species.name} className="w-24 h-24 drop-shadow-md z-10 group-hover:scale-110 transition-transform" style={{ imageRendering: 'pixelated' }} />
+                  </div>
+                  <h3 className="text-center font-mono font-bold uppercase text-xs text-black tracking-widest bg-gray-100 border-2 border-black rounded-full py-1">{entry.pokemon_species.name}</h3>
+                  {isPlayer && <span className="absolute top-2 left-2 text-[10px] font-mono font-bold uppercase bg-blue-500 text-white px-2 py-0.5 rounded-full border-2 border-black shadow-sm">P1</span>}
+                  {isOpponent && <span className="absolute top-2 right-2 text-[10px] font-mono font-bold uppercase bg-red-500 text-white px-2 py-0.5 rounded-full border-2 border-black shadow-sm">P2</span>}
                 </div>
-                <h3 className="text-center font-black capitalize text-gray-800 tracking-wide text-sm">{entry.pokemon_species.name}</h3>
-                {isPlayer && <span className="absolute top-2 left-2 text-[10px] font-black bg-blue-500 text-white px-2 py-1 rounded shadow-md border border-blue-700">P1</span>}
-                {isOpponent && <span className="absolute top-2 right-2 text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded shadow-md border border-red-700">P2</span>}
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
