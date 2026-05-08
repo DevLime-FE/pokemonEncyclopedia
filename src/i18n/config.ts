@@ -31,7 +31,26 @@ const resources = {
       "{{name}} used {{move}}!": "{{name}}의 {{move}}!",
       "Dealt {{damage}} damage!": "{{damage}}의 데미지를 입혔다!",
       "Opponent {{name}} fainted! Player 1 wins!": "{{name}}은(는) 쓰러졌다! 플레이어 1 승리!",
-      "{{name}} fainted! Player 2 wins!": "{{name}}은(는) 쓰러졌다! 플레이어 2 승리!"
+      "{{name}} fainted! Player 2 wins!": "{{name}}은(는) 쓰러졌다! 플레이어 2 승리!",
+      "Kanto": "관동",
+      "Johto": "성도",
+      "Hoenn": "호연",
+      "Sinnoh": "신오",
+      "Unova": "하나",
+      "Kalos": "칼로스",
+      "Alola": "알로라",
+      "Galar": "가라르",
+      "Paldea": "팔데아",
+      "desc_kanto": "포켓몬스터의 역사가 시작된 상징적인 관동지방! 평화로운 태초마을에서 시작해 상록숲과 달맞이산을 거치며 수많은 트레이너들이 포켓몬 마스터의 꿈을 키웠습니다.",
+      "desc_johto": "전통과 역사가 깊게 스며있는 성도지방! 아름다운 방울탑과 소용돌이섬 등 신비로운 전설이 살아 숨 쉬는 곳에서 새로운 모험을 떠나보세요.",
+      "desc_hoenn": "푸른 바다와 대지가 어우러진 대자연의 호연지방! 화산재가 날리는 길과 해저 동굴 등 다이나믹한 자연환경과 비밀기지의 낭만이 가득합니다.",
+      "desc_sinnoh": "신화가 살아 숨 쉬는 북쪽의 신오지방! 천관산을 중심으로 한 장엄한 경관 속에서 시공간을 넘나드는 웅대한 전설의 모험이 기다립니다.",
+      "desc_unova": "현대적인 대도시와 다양한 문화가 융합된 하나지방! 거대한 빌딩 숲과 독자적인 생태계 속에서 이상과 진실을 향한 흥미진진한 스토리가 펼쳐집니다.",
+      "desc_kalos": "아름다움과 예술이 넘치는 패션의 중심지 칼로스지방! 포켓몬과 트레이너의 유대가 만들어내는 '메가진화'의 신비로운 힘을 직접 경험해 보세요.",
+      "desc_alola": "4개의 아름다운 섬으로 이루어진 남국의 알로라지방! 전통적인 체육관 대신 '섬순례'라는 독특한 시련과 Z기술의 강력한 에너지가 트레이너들을 반깁니다.",
+      "desc_galar": "포켓몬 배틀이 열광적인 스포츠로 자리 잡은 가라르지방! 거대한 스타디움의 환호 속에서 거대화하는 '다이맥스' 배틀의 짜릿함을 느껴보세요.",
+      "desc_paldea": "웅대한 자연과 풍부한 자원이 넘치는 넓은 팔데아지방! 정해진 길 없이 자유롭게 탐험하는 진정한 오픈월드 속에서 나만의 보물을 찾아보세요.",
+      "Explore Region": "지방 탐험하기"
     }
   },
   en: {
@@ -63,7 +82,26 @@ const resources = {
       "{{name}} used {{move}}!": "{{name}} used {{move}}!",
       "Dealt {{damage}} damage!": "Dealt {{damage}} damage!",
       "Opponent {{name}} fainted! Player 1 wins!": "{{name}} fainted! Player 1 wins!",
-      "{{name}} fainted! Player 2 wins!": "{{name}} fainted! Player 2 wins!"
+      "{{name}} fainted! Player 2 wins!": "{{name}} fainted! Player 2 wins!",
+      "Kanto": "Kanto",
+      "Johto": "Johto",
+      "Hoenn": "Hoenn",
+      "Sinnoh": "Sinnoh",
+      "Unova": "Unova",
+      "Kalos": "Kalos",
+      "Alola": "Alola",
+      "Galar": "Galar",
+      "Paldea": "Paldea",
+      "desc_kanto": "The iconic Kanto region, where the history of Pokémon began! Countless trainers have chased their dreams of becoming a Pokémon Master starting from peaceful Pallet Town.",
+      "desc_johto": "A region steeped in deep tradition and history! Johto is a land of mystical legends, featuring the beautiful Bell Tower and the perilous Whirl Islands.",
+      "desc_hoenn": "A region of abundant nature, blending vast oceans and rich lands! Explore dynamic environments from volcanic trails to deep underwater caverns.",
+      "desc_sinnoh": "A northern region steeped in ancient myths! An epic adventure transcending time and space awaits around the majestic Mt. Coronet.",
+      "desc_unova": "A diverse region blending modern cities with natural landscapes! Uncover the truth and ideals in a land with a completely unique Pokémon ecosystem.",
+      "desc_kalos": "A beautiful region focused on art and fashion! Experience the mysterious power of 'Mega Evolution' born from the bond between Pokémon and trainer.",
+      "desc_alola": "A warm tropical archipelago of four islands! Take on the unique Island Challenge and unleash the explosive power of Z-Moves under the sunny skies.",
+      "desc_galar": "A region where Pokémon battles are a phenomenal spectator sport! Feel the thrill of Dynamax battles in gigantic stadiums filled with cheering fans.",
+      "desc_paldea": "A vast region offering a true open-world adventure! Travel freely across majestic landscapes and discover the sparkling Terastal phenomenon to find your treasure.",
+      "Explore Region": "Explore Region"
     }
   },
   ja: {
@@ -95,7 +133,26 @@ const resources = {
       "{{name}} used {{move}}!": "{{name}}の {{move}}！",
       "Dealt {{damage}} damage!": "{{damage}}のダメージを与えた！",
       "Opponent {{name}} fainted! Player 1 wins!": "{{name}}は倒れた！プレイヤー 1の勝利！",
-      "{{name}} fainted! Player 2 wins!": "{{name}}は倒れた！プレイヤー 2の勝利！"
+      "{{name}} fainted! Player 2 wins!": "{{name}}は倒れた！プレイヤー 2の勝利！",
+      "Kanto": "カントー",
+      "Johto": "ジョウト",
+      "Hoenn": "ホウエン",
+      "Sinnoh": "シンオウ",
+      "Unova": "イッシュ",
+      "Kalos": "カロス",
+      "Alola": "アローラ",
+      "Galar": "ガラル",
+      "Paldea": "パルデア",
+      "desc_kanto": "ポケモンの歴史が始まった象徴的なカントー地方！のどかなマサラタウンから始まり、多くのトレーナーがポケモンマスターの夢を育んできました。",
+      "desc_johto": "伝統と歴史が深く息づくジョウト地方！スズのとうやうずまきじまなど、神秘的な伝説が生きる場所で新たな冒険に出発しましょう。",
+      "desc_hoenn": "青い海と大地が織りなす大自然のホウエン地方！火山灰が舞う道や海底洞窟など、ダイナミックな自然環境とひみつきちのロマンが満載です。",
+      "desc_sinnoh": "神話が息づく北のシンオウ地方！テンガンざんを中心とした荘厳な景観の中で、時空を超える壮大な伝説の冒険が待っています。",
+      "desc_unova": "近代的な大都市と多様な文化が融合したイッシュ地方！巨大なビル群と独自の生態系の中で、理想と真実に向かう興味深いストーリーが展開されます。",
+      "desc_kalos": "美と芸術にあふれるファッションの中心地カロス地方！ポケモンとトレーナーの絆が生み出す「メガシンカ」の神秘的な力を体験してください。",
+      "desc_alola": "4つの美しい島からなる南国のアローラ地方！伝統的なジムの代わりに「島めぐり」というユニークな試練と、Zワザの強力なエネルギーがトレーナーを迎えます。",
+      "desc_galar": "ポケモンバトルが熱狂的なスポーツとして定着したガラル地方！巨大なスタジアムの歓声の中、巨大化する「ダイマックス」バトルのスリルを感じてください。",
+      "desc_paldea": "壮大な自然と豊かな資源があふれる広いパルデア地方！決められた道はなく、自由に探索できる真のオープンワールドで自分だけの宝物を見つけましょう。",
+      "Explore Region": "地方を探検する"
     }
   }
 };

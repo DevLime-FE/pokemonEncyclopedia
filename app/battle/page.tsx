@@ -163,7 +163,7 @@ export default function BattlePage() {
       
       if (newHp <= 0) {
         await wait(1000);
-        setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: opponentPokemon.name })]);
+        setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: opponentPokemon!.name })]);
         setBattleOver(true);
         setIsProcessing(false);
         return;
@@ -186,7 +186,7 @@ export default function BattlePage() {
       
       if (newHp <= 0) {
         await wait(1000);
-        setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: playerPokemon.name })]);
+        setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: playerPokemon!.name })]);
         setBattleOver(true);
         setIsProcessing(false);
         return;
