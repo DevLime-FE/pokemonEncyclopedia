@@ -50,7 +50,7 @@ const typeColors: Record<string, string> = {
 export default function BattlePage() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { playerPokemon, opponentPokemon, resetBattle } = useBattle();
+  const { playerPokemon, opponentPokemon, playerMoves: contextPlayerMoves, opponentMoves: contextOpponentMoves, resetBattle } = useBattle();
   
   const [logs, setLogs] = useState<string[]>([]);
   const [battleOver, setBattleOver] = useState(false);
@@ -90,8 +90,8 @@ export default function BattlePage() {
       setOppHp(currentOHp);
       
       try {
-        const pMoves = await getRandomMoves(playerPokemon.moves, 4);
-        const oMoves = await getRandomMoves(opponentPokemon.moves, 4);
+        const pMoves = contextPlayerMoves?.length ? contextPlayerMoves : await getRandomMoves(playerPokemon.moves, 4);
+        const oMoves = contextOpponentMoves?.length ? contextOpponentMoves : await getRandomMoves(opponentPokemon.moves, 4);
         setPlayerMoves(pMoves);
         setOpponentMoves(oMoves);
       } catch (err) {

@@ -2,13 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getPokedexByRegion, getPokemon, Pokemon, PokedexEntry } from '@/src/services/pokeapi';
+import { getPokedexByRegion, getPokemon, Pokemon, PokedexEntry, getRandomMoves, MoveDetails, getMovesDetails, PokemonMove } from '@/src/services/pokeapi';
 import PokemonCard from '@/src/components/PokemonCard';
 import { useBattle } from '@/src/context/BattleContext';
 import { useTranslation } from 'react-i18next';
 
+const typeColors: Record<string, string> = {
+  normal: 'bg-gray-400', fire: 'bg-red-500', water: 'bg-blue-500', grass: 'bg-green-500',
+  electric: 'bg-yellow-400 text-gray-900', ice: 'bg-cyan-300 text-gray-900', fighting: 'bg-orange-700',
+  poison: 'bg-purple-500', ground: 'bg-yellow-600', flying: 'bg-indigo-300 text-gray-900',
+  psychic: 'bg-pink-500', bug: 'bg-lime-500 text-gray-900', rock: 'bg-yellow-800',
+  ghost: 'bg-indigo-800', dragon: 'bg-indigo-600', dark: 'bg-gray-800',
+  steel: 'bg-gray-500', fairy: 'bg-pink-300 text-gray-900'
+};
+
 export default function RegionPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const params = useParams();
   const router = useRouter();
   const regionName = params.regionName as string;
@@ -16,10 +25,82 @@ export default function RegionPage() {
   const [entries, setEntries] = useState<PokedexEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { setPlayerPokemon, setOpponentPokemon } = useBattle();
+  const { setPlayerPokemon, setOpponentPokemon, playerMoves, opponentMoves, setPlayerMoves, setOpponentMoves } = useBattle();
   const [selectedPlayer, setSelectedPlayer] = useState<Pokemon | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState<Pokemon | null>(null);
   const [pokemonCache, setPokemonCache] = useState<Record<string, Pokemon>>({});
+
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<'player1' | 'player2' | null>(null);
+  const [tempSelectedMoves, setTempSelectedMoves] = useState<MoveDetails[]>([]);
+  const [availableMovesDetails, setAvailableMovesDetails] = useState<MoveDetails[]>([]);
+  const [isLoadingAvailableMoves, setIsLoadingAvailableMoves] = useState(false);
+  const [isFetchingMoves, setIsFetchingMoves] = useState(false);
+
+  const getLocalizedMoveName = (move: MoveDetails) => {
+    const lang = i18n.language.startsWith('ko') ? 'ko' : i18n.language.startsWith('ja') ? 'ja' : 'en';
+    const nameObj = move.names.find(n => n.language.name === lang) || move.names.find(n => n.language.name === 'en');
+    return nameObj ? nameObj.name : move.name;
+  };
+
+  const getLocalizedMoveDescription = (move: MoveDetails) => {
+    if (!move.flavor_text_entries) return '';
+    const lang = i18n.language.startsWith('ko') ? 'ko' : i18n.language.startsWith('ja') ? 'ja' : 'en';
+    const descObj = move.flavor_text_entries.find(f => f.language.name === lang) || move.flavor_text_entries.find(f => f.language.name === 'en');
+    return descObj ? descObj.flavor_text.replace(/[\n\f\r]/g, ' ') : '';
+  };
+
+  const openMoveEditModal = async (playerType: 'player1' | 'player2') => {
+    setEditingPlayer(playerType);
+    const pkmn = playerType === 'player1' ? selectedPlayer : selectedOpponent;
+    const currentMoves = playerType === 'player1' ? playerMoves : opponentMoves;
+    if (pkmn) {
+      setTempSelectedMoves([...currentMoves]);
+      setIsMoveModalOpen(true);
+      setIsLoadingAvailableMoves(true);
+      try {
+        const urls = pkmn.moves.map(m => m.move.url);
+        const allDetails = await getMovesDetails(urls);
+        setAvailableMovesDetails(allDetails);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoadingAvailableMoves(false);
+      }
+    } else {
+      setTempSelectedMoves([]);
+    }
+  };
+
+  const toggleTempMove = (move: MoveDetails) => {
+    setTempSelectedMoves(prev => {
+      const exists = prev.find(m => m.name === move.name);
+      if (exists) {
+        return prev.filter(m => m.name !== move.name);
+      }
+      if (prev.length >= 4) {
+        return prev;
+      }
+      return [...prev, move];
+    });
+  };
+
+  const confirmMoveSelection = async () => {
+    if (tempSelectedMoves.length !== 4 || !editingPlayer) return;
+    setIsFetchingMoves(true);
+    try {
+      if (editingPlayer === 'player1') {
+        setPlayerMoves([...tempSelectedMoves]);
+      } else {
+        setOpponentMoves([...tempSelectedMoves]);
+      }
+      setIsMoveModalOpen(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFetchingMoves(false);
+    }
+  };
 
   useEffect(() => {
     async function loadRegion() {
@@ -48,21 +129,27 @@ export default function RegionPage() {
     if (selectedPlayer?.name === pkmn.name) {
       setSelectedPlayer(null);
       setPlayerPokemon(null);
+      setPlayerMoves([]);
       return;
     }
 
     if (selectedOpponent?.name === pkmn.name) {
       setSelectedOpponent(null);
       setOpponentPokemon(null);
+      setOpponentMoves([]);
       return;
     }
 
     if (!selectedPlayer) {
       setSelectedPlayer(pkmn);
       setPlayerPokemon(pkmn);
+      setPlayerMoves([]);
+      getRandomMoves(pkmn.moves, 4).then(setPlayerMoves);
     } else if (!selectedOpponent) {
       setSelectedOpponent(pkmn);
       setOpponentPokemon(pkmn);
+      setOpponentMoves([]);
+      getRandomMoves(pkmn.moves, 4).then(setOpponentMoves);
     }
   };
 
@@ -140,15 +227,55 @@ export default function RegionPage() {
         <div className="w-full h-2 bg-[#ff6b8b] border-b-4 border-black"></div>
         <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 max-w-[1400px]">
           <div className="flex justify-between items-center gap-2 sm:gap-6">
-            
+
             {/* Player 1 Slot (Blue Pokedex LCD) */}
-            <div 
+            <div
               onClick={() => { setSelectedPlayer(null); setPlayerPokemon(null); }}
-              className={`flex-1 flex items-center p-2 sm:p-4 border-[4px] sm:border-[6px] border-black rounded-xl cursor-pointer transition-all duration-300 ${selectedPlayer ? 'bg-[#1e3a8a] shadow-[8px_8px_0_0_rgba(0,0,0,0.5)] hover:scale-[1.02]' : 'bg-[#1e3a8a] border-dashed opacity-80 hover:opacity-100 hover:scale-[1.02]'}`}
+              className={`flex-1 flex items-center p-2 sm:p-4 border-[4px] sm:border-[6px] border-black rounded-xl cursor-pointer transition-all duration-300 relative ${selectedPlayer ? 'bg-[#1e3a8a] shadow-[8px_8px_0_0_rgba(0,0,0,0.5)] hover:scale-[1.02]' : 'bg-[#1e3a8a] border-dashed opacity-80 hover:opacity-100 hover:scale-[1.02]'}`}
             >
+              {/* P1 Move Popup */}
+              {selectedPlayer && (
+                <div className="absolute bottom-full left-0 mb-4 sm:mb-8 w-full min-w-[280px] max-w-lg bg-white border-[4px] border-black p-3 sm:p-4 rounded-xl shadow-[8px_8px_0_0_rgba(0,0,0,1)] z-[100] cursor-default" onClick={e => e.stopPropagation()}>
+                  <div className="absolute -bottom-4 left-10 w-6 h-6 bg-white border-r-[4px] border-b-[4px] border-black rotate-45 transform"></div>
+                  <div className="flex justify-between items-center mb-2 sm:mb-3">
+                    <h3 className="font-mono text-black uppercase font-bold text-sm sm:text-lg tracking-widest flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-black animate-pulse"></div>
+                      {t('Moveset')}
+                    </h3>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); openMoveEditModal('player1'); }}
+                      className="px-2 py-1 bg-yellow-400 border-2 border-black font-mono text-[10px] sm:text-xs font-bold uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] hover:bg-yellow-300 transition-all"
+                    >
+                      {t('Edit')}
+                    </button>
+                  </div>
+                  {playerMoves.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                      {playerMoves.map(m => (
+                        <div key={m.id} className={`p-2 rounded text-white font-mono border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] flex flex-col gap-1 ${typeColors[m.type.name] || 'bg-gray-400'}`}>
+                          <div className="flex justify-between items-start w-full gap-2">
+                            <span className="text-xs sm:text-sm uppercase font-bold break-words leading-tight" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}>{getLocalizedMoveName(m)}</span>
+                            <span className="text-[10px] bg-black/40 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">{m.type.name}</span>
+                          </div>
+                          <div className="flex gap-2 text-[10px] opacity-90 mt-0.5">
+                            <span>PWR: {m.power || '--'}</span>
+                            <span>ACC: {m.accuracy || '--'}</span>
+                          </div>
+                          <span className="text-[10px] sm:text-[11px] leading-snug mt-1 pt-1 border-t border-white/30" style={{ textShadow: '1px 1px 0px rgba(0,0,0,0.5)' }}>{getLocalizedMoveDescription(m)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex justify-center items-center py-4">
+                      <span className="text-black font-mono animate-pulse uppercase font-bold">{t('Loading moves...')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="w-16 h-16 sm:w-32 sm:h-32 bg-[#98cb98] rounded-lg flex items-center justify-center relative border-[4px] border-black shrink-0 shadow-[inset_4px_4px_0_0_rgba(0,0,0,0.2)]">
                 <div className="absolute inset-0 opacity-10 rounded-sm bg-[linear-gradient(rgba(0,0,0,0.1)_1px,_transparent_1px)] pointer-events-none overflow-hidden" style={{ backgroundSize: '100% 4px' }}></div>
-                
+
                 {/* Poke Ball Animation Container */}
                 <div key={selectedPlayer?.name || 'empty-p1'} className={`relative w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center z-10 ${selectedPlayer ? 'animate-throw-left' : ''}`}>
                   {/* Real Poke Ball Sprite - Top Half */}
@@ -159,9 +286,9 @@ export default function RegionPage() {
                   <div className="absolute inset-0 origin-top" style={{ zIndex: 20, clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)', animation: selectedPlayer ? 'openBottom 0.3s ease-out 0.8s both' : 'none' }}>
                     <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" className="w-full h-full drop-shadow-md" style={{ imageRendering: 'pixelated' }} alt="pokeball bottom" />
                   </div>
-                  
+
                   {selectedPlayer && (
-                    <div className="absolute z-30" style={{ animation: 'popOut 0.4s ease-out 0.9s both', top: '10px' }}>
+                    <div className="absolute z-30" style={{ animation: 'popOut 0.4s ease-out 0.9s both', top: '-10px' }}>
                       <img src={selectedPlayer.sprites.front_default} className="w-24 h-24 sm:w-32 sm:h-32 max-w-none object-contain drop-shadow-[4px_4px_0_rgba(0,0,0,0.3)] animate-bounce" style={{ imageRendering: 'pixelated' }} alt="P1 Pokemon" />
                     </div>
                   )}
@@ -181,9 +308,9 @@ export default function RegionPage() {
             {/* VS Button */}
             <div className="shrink-0 relative">
               <div className="absolute -top-4 -left-4 w-8 h-8 bg-[#28aafd] border-4 border-black rounded-full shadow-[inset_-2px_-2px_0_0_rgba(0,0,0,0.3)] hidden sm:block">
-                 <div className="w-2 h-2 bg-white rounded-full opacity-60 ml-1 mt-1"></div>
+                <div className="w-2 h-2 bg-white rounded-full opacity-60 ml-1 mt-1"></div>
               </div>
-              <button 
+              <button
                 disabled={!selectedPlayer || !selectedOpponent}
                 onClick={startGame}
                 className="px-4 py-4 sm:px-8 sm:py-8 bg-yellow-400 text-black font-mono uppercase text-lg sm:text-4xl font-black rounded-full disabled:opacity-30 disabled:grayscale transition-transform transform hover:scale-110 hover:bg-yellow-300 border-[4px] sm:border-[8px] border-black shadow-[0_6px_0_0_rgba(0,0,0,1)] active:shadow-none active:translate-y-[6px] flex flex-col items-center justify-center w-20 h-20 sm:w-40 sm:h-40 z-10"
@@ -194,13 +321,53 @@ export default function RegionPage() {
             </div>
 
             {/* Player 2 Slot (Red Pokedex LCD) */}
-            <div 
+            <div
               onClick={() => { setSelectedOpponent(null); setOpponentPokemon(null); }}
-              className={`flex-1 flex items-center flex-row-reverse p-2 sm:p-4 border-[4px] sm:border-[6px] border-black rounded-xl cursor-pointer transition-all duration-300 ${selectedOpponent ? 'bg-[#b90020] shadow-[8px_8px_0_0_rgba(0,0,0,0.5)] hover:scale-[1.02]' : 'bg-[#b90020] border-dashed opacity-80 hover:opacity-100 hover:scale-[1.02]'}`}
+              className={`flex-1 flex items-center flex-row-reverse p-2 sm:p-4 border-[4px] sm:border-[6px] border-black rounded-xl cursor-pointer transition-all duration-300 relative ${selectedOpponent ? 'bg-[#b90020] shadow-[8px_8px_0_0_rgba(0,0,0,0.5)] hover:scale-[1.02]' : 'bg-[#b90020] border-dashed opacity-80 hover:opacity-100 hover:scale-[1.02]'}`}
             >
+              {/* P2 Move Popup */}
+              {selectedOpponent && (
+                <div className="absolute bottom-full right-0 mb-4 sm:mb-8 w-full min-w-[280px] max-w-lg bg-white border-[4px] border-black p-3 sm:p-4 rounded-xl shadow-[8px_8px_0_0_rgba(0,0,0,1)] z-[100] cursor-default" onClick={e => e.stopPropagation()}>
+                  <div className="absolute -bottom-4 right-10 w-6 h-6 bg-white border-l-[4px] border-b-[4px] border-black -rotate-45 transform"></div>
+                  <div className="flex justify-between items-center mb-2 sm:mb-3 flex-row-reverse">
+                    <h3 className="font-mono text-black uppercase font-bold text-sm sm:text-lg tracking-widest flex items-center gap-2 justify-end">
+                      {t('Moveset')}
+                      <div className="w-3 h-3 bg-red-500 rounded-full border-2 border-black animate-pulse"></div>
+                    </h3>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); openMoveEditModal('player2'); }}
+                      className="px-2 py-1 bg-yellow-400 border-2 border-black font-mono text-[10px] sm:text-xs font-bold uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] hover:bg-yellow-300 transition-all"
+                    >
+                      {t('Edit')}
+                    </button>
+                  </div>
+                  {opponentMoves.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                      {opponentMoves.map(m => (
+                        <div key={m.id} className={`p-2 rounded text-white font-mono border-[3px] border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] flex flex-col gap-1 text-left ${typeColors[m.type.name] || 'bg-gray-400'}`}>
+                          <div className="flex justify-between items-start w-full gap-2">
+                            <span className="text-xs sm:text-sm uppercase font-bold break-words leading-tight" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}>{getLocalizedMoveName(m)}</span>
+                            <span className="text-[10px] bg-black/40 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">{m.type.name}</span>
+                          </div>
+                          <div className="flex gap-2 text-[10px] opacity-90 mt-0.5">
+                            <span>PWR: {m.power || '--'}</span>
+                            <span>ACC: {m.accuracy || '--'}</span>
+                          </div>
+                          <span className="text-[10px] sm:text-[11px] leading-snug mt-1 pt-1 border-t border-white/30" style={{ textShadow: '1px 1px 0px rgba(0,0,0,0.5)' }}>{getLocalizedMoveDescription(m)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex justify-center items-center py-4">
+                      <span className="text-black font-mono animate-pulse uppercase font-bold">{t('Loading moves...')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="w-16 h-16 sm:w-32 sm:h-32 bg-[#98cb98] rounded-lg flex items-center justify-center relative border-[4px] border-black shrink-0 shadow-[inset_4px_4px_0_0_rgba(0,0,0,0.2)]">
                 <div className="absolute inset-0 opacity-10 rounded-sm bg-[linear-gradient(rgba(0,0,0,0.1)_1px,_transparent_1px)] pointer-events-none overflow-hidden" style={{ backgroundSize: '100% 4px' }}></div>
-                
+
                 {/* Poke Ball Animation Container */}
                 <div key={selectedOpponent?.name || 'empty-p2'} className={`relative w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center z-10 ${selectedOpponent ? 'animate-throw-right' : ''}`}>
                   {/* Real Poke Ball Sprite - Top Half */}
@@ -211,9 +378,9 @@ export default function RegionPage() {
                   <div className="absolute inset-0 origin-top" style={{ zIndex: 20, clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)', animation: selectedOpponent ? 'openBottom 0.3s ease-out 0.8s both' : 'none' }}>
                     <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" className="w-full h-full drop-shadow-md" style={{ imageRendering: 'pixelated' }} alt="pokeball bottom" />
                   </div>
-                  
+
                   {selectedOpponent && (
-                    <div className="absolute z-30" style={{ animation: 'popOut 0.4s ease-out 0.9s both', top: '10px' }}>
+                    <div className="absolute z-30" style={{ animation: 'popOut 0.4s ease-out 0.9s both', top: '-15px' }}>
                       <img src={selectedOpponent.sprites.front_default} className="w-24 h-24 sm:w-32 sm:h-32 max-w-none object-contain drop-shadow-[4px_4px_0_rgba(0,0,0,0.3)] animate-bounce" style={{ imageRendering: 'pixelated' }} alt="P2 Pokemon" />
                     </div>
                   )}
@@ -233,6 +400,88 @@ export default function RegionPage() {
           </div>
         </div>
       </div>
+
+      {/* Move Selection Modal */}
+      {isMoveModalOpen && editingPlayer && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white border-[8px] border-black rounded-2xl p-4 sm:p-8 w-full max-w-3xl shadow-[12px_12px_0_0_rgba(0,0,0,1)] flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl sm:text-3xl font-mono uppercase font-black text-black" style={{ textShadow: '2px 2px 0px #facc15' }}>
+                {t('Select 4 Moves')}
+              </h2>
+              <button onClick={() => setIsMoveModalOpen(false)} className="text-black font-black text-2xl hover:text-red-600">&times;</button>
+            </div>
+            
+            <div className="mb-4 bg-gray-100 p-4 border-4 border-black rounded">
+              <div className="text-sm font-mono uppercase font-bold mb-2 flex justify-between">
+                <span>{t('Selected Moves')}:</span>
+                <span className={tempSelectedMoves.length === 4 ? 'text-green-600' : 'text-red-600'}>{tempSelectedMoves.length} / 4</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tempSelectedMoves.length > 0 ? tempSelectedMoves.map(m => (
+                  <div key={m.id} className="px-2 py-1 bg-black text-white font-mono text-xs uppercase rounded flex items-center gap-2">
+                    {getLocalizedMoveName(m)}
+                    <button onClick={() => toggleTempMove(m)} className="text-red-400 hover:text-red-200 font-bold">&times;</button>
+                  </div>
+                )) : <span className="text-gray-400 text-xs font-mono italic">{t('No moves selected')}</span>}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto border-4 border-black p-2 sm:p-4 bg-white grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 relative min-h-[200px]">
+              {isLoadingAvailableMoves ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10 font-mono text-xl animate-pulse font-bold">
+                  {t('Loading moves...')}
+                </div>
+              ) : null}
+              {[...availableMovesDetails].sort((a, b) => {
+                const aSelected = tempSelectedMoves.some(sm => sm.name === a.name);
+                const bSelected = tempSelectedMoves.some(sm => sm.name === b.name);
+                if (aSelected && !bSelected) return -1;
+                if (!aSelected && bSelected) return 1;
+                return 0;
+              }).map((m, idx) => {
+                const isSelected = tempSelectedMoves.some(sm => sm.name === m.name);
+                return (
+                  <button
+                    key={`${m.name}-${idx}`}
+                    onClick={() => toggleTempMove(m)}
+                    className={`p-2 border-2 border-black font-mono flex flex-col gap-1 transition-all text-left ${isSelected ? 'bg-green-400 shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.2)] scale-95' : 'bg-white hover:bg-gray-100 shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:-translate-y-0.5'}`}
+                  >
+                    <div className="flex justify-between items-start w-full gap-1">
+                      <span className="text-[10px] sm:text-xs uppercase font-bold break-words flex-1 leading-tight">{getLocalizedMoveName(m)}</span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className={`text-[8px] text-white px-1.5 py-0.5 rounded uppercase shrink-0 ${typeColors[m.type.name] || 'bg-gray-400'}`}>{m.type.name}</span>
+                    </div>
+                    <div className="flex gap-2 text-[8px] sm:text-[9px] opacity-80 mt-auto pt-1">
+                      <span>PWR: {m.power || '--'}</span>
+                      <span>ACC: {m.accuracy || '--'}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-4">
+              <button 
+                onClick={() => setIsMoveModalOpen(false)}
+                className="px-6 py-2 bg-gray-300 border-4 border-black font-mono uppercase font-bold shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:shadow-none active:translate-y-[4px] hover:bg-gray-400"
+              >
+                {t('Cancel')}
+              </button>
+              <button 
+                onClick={confirmMoveSelection}
+                disabled={tempSelectedMoves.length !== 4 || isFetchingMoves}
+                className="px-6 py-2 bg-yellow-400 border-4 border-black font-mono uppercase font-bold shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:shadow-none active:translate-y-[4px] hover:bg-yellow-300 disabled:opacity-50 disabled:grayscale transition-all flex items-center gap-2"
+              >
+                {isFetchingMoves ? <span className="animate-spin inline-block">↻</span> : null}
+                {t('Confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

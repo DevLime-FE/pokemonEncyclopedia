@@ -30,6 +30,10 @@ export interface MoveDetails {
     language: { name: string };
     name: string;
   }[];
+  flavor_text_entries: {
+    flavor_text: string;
+    language: { name: string };
+  }[];
 }
 
 export interface Pokemon {
@@ -126,9 +130,44 @@ export async function getRandomMoves(movesList: PokemonMove[], count: number = 4
       power: 50,
       accuracy: 100,
       type: { name: 'normal' },
-      names: [{ language: { name: 'ko' }, name: '발버둥' }, { language: { name: 'en' }, name: 'Struggle' }, { language: { name: 'ja' }, name: 'わるあがき' }]
+      names: [{ language: { name: 'ko' }, name: '발버둥' }, { language: { name: 'en' }, name: 'Struggle' }, { language: { name: 'ja' }, name: 'わるあがき' }],
+      flavor_text_entries: [{ language: { name: 'en' }, flavor_text: 'A struggling attack.' }, { language: { name: 'ko' }, flavor_text: '발버둥치는 공격.' }]
     });
   }
   
   return selectedMoves;
+}
+
+export async function getMovesDetails(urls: string[]): Promise<MoveDetails[]> {
+  if (!urls || urls.length === 0) return [];
+
+  const fetchPromises = urls.map(async (url) => {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data: MoveDetails = await res.json();
+        return data;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  });
+
+  const results = await Promise.all(fetchPromises);
+  const validMoves = results.filter((m): m is MoveDetails => m !== null);
+  
+  if (validMoves.length === 0) {
+    validMoves.push({
+      id: 165,
+      name: 'struggle',
+      power: 50,
+      accuracy: 100,
+      type: { name: 'normal' },
+      names: [{ language: { name: 'ko' }, name: '발버둥' }, { language: { name: 'en' }, name: 'Struggle' }, { language: { name: 'ja' }, name: 'わるあがき' }],
+      flavor_text_entries: [{ language: { name: 'en' }, flavor_text: 'A struggling attack.' }, { language: { name: 'ko' }, flavor_text: '발버둥치는 공격.' }]
+    });
+  }
+  
+  return validMoves;
 }
