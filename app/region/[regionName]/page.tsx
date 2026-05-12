@@ -51,6 +51,7 @@ export default function RegionPage() {
   const [tempSelectedMoves, setTempSelectedMoves] = useState<MoveDetails[]>([]);
   const [availableMovesDetails, setAvailableMovesDetails] = useState<MoveDetails[]>([]);
   const [isLoadingAvailableMoves, setIsLoadingAvailableMoves] = useState(false);
+  const [hoveredMove, setHoveredMove] = useState<MoveDetails | null>(null);
   
   const [playerPokedexTab, setPlayerPokedexTab] = useState<'info' | 'moves'>('info');
   const [opponentPokedexTab, setOpponentPokedexTab] = useState<'info' | 'moves'>('info');
@@ -73,6 +74,14 @@ export default function RegionPage() {
                    move.names.find(n => n.language.name === 'ko') || 
                    move.names.find(n => n.language.name === 'en');
     return nameObj ? nameObj.name : move.name;
+  };
+
+  const getLocalizedMoveDescription = (move: MoveDetails) => {
+    const lang = i18n.language.startsWith('ko') ? 'ko' : i18n.language.startsWith('ja') ? 'ja' : 'en';
+    const descObj = move.flavor_text_entries.find(f => f.language.name === lang) || 
+                    move.flavor_text_entries.find(f => f.language.name === 'ko') || 
+                    move.flavor_text_entries.find(f => f.language.name === 'en');
+    return descObj ? descObj.flavor_text.replace(/[\n\f\r]/g, ' ') : '';
   };
 
   const getLocalizedPokemonDescription = (species: PokemonSpecies | null) => {
@@ -245,7 +254,7 @@ export default function RegionPage() {
   };
 
   const confirmMoveSelection = () => {
-    if (tempSelectedMoves.length !== 4) return;
+    if (tempSelectedMoves.length < 1 || tempSelectedMoves.length > 4) return;
     if (editingPlayer === 'player1') {
       setPlayerMoves(tempSelectedMoves);
     } else {
@@ -327,7 +336,7 @@ export default function RegionPage() {
                     <div className="bg-black/30 border-2 border-white/5 rounded-lg sm:rounded-[1.2rem] p-2 sm:p-4 flex flex-col items-center relative overflow-hidden h-full min-h-[100px] sm:min-h-[160px] justify-center">
                       <div className="absolute top-1 right-2 text-[6px] sm:text-[8px] font-mono text-white/10 font-black">#{String(id).padStart(3, '0')}</div>
                       <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`} className={`w-16 h-16 sm:w-24 sm:h-24 transition-transform duration-500 ${isP1 || isP2 ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'group-hover:scale-125'}`} style={{ imageRendering: 'pixelated' }} />
-                      <h3 className={`mt-1 sm:mt-2 font-mono font-black text-[8px] sm:text-xs uppercase truncate w-full text-center tracking-tight transition-colors ${isP1 || isP2 ? 'text-white' : 'text-white/40 group-hover:text-white'}`}>{displayName}</h3>
+                      <h3 className={`mt-1 sm:mt-2 font-mono font-black text-[10px] sm:text-sm uppercase truncate w-full text-center tracking-tight transition-colors ${isP1 || isP2 ? 'text-white' : 'text-white/40 group-hover:text-white'}`}>{displayName}</h3>
                     </div>
                   </div>
                 );
@@ -390,32 +399,152 @@ export default function RegionPage() {
       {/* 기술 편집 모달 (반응형 사이즈) */}
       {isMoveModalOpen && editingPlayer && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-4">
-          <div className="bg-[#1a1a1a] border-[6px] sm:border-[10px] border-black rounded-[1.5rem] sm:rounded-[3rem] p-4 sm:p-10 w-full max-w-4xl flex flex-col max-h-[90vh] shadow-2xl relative overflow-hidden">
+          <div className="bg-[#111] border-[4px] sm:border-[8px] border-black rounded-[1.5rem] sm:rounded-[2.5rem] w-full max-w-5xl flex flex-col max-h-[95vh] shadow-[0_0_100px_rgba(0,0,0,0.8)] relative overflow-hidden animate-in zoom-in-95 duration-300">
+            
+            {/* 상단 장식 및 슬롯 바 */}
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50"></div>
-            <div className="flex justify-between items-center mb-4 sm:mb-10">
-               <div className="flex flex-col">
-                  <span className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-0.5">Configuration.Moves</span>
-                  <h2 className="text-lg sm:text-4xl font-mono uppercase font-black text-white tracking-tighter leading-none">{t('Define Protocol')}</h2>
-               </div>
+            
+            <div className="p-4 sm:p-8 flex flex-col gap-4 sm:gap-6">
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] mb-0.5">Configuration.Protocol</span>
+                  <h2 className="text-xl sm:text-4xl font-mono uppercase font-black text-white tracking-tighter leading-none">{t('Define Protocol')}</h2>
+                </div>
+                <div className="flex gap-2 sm:gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className={`w-3 h-3 sm:w-5 sm:h-5 rounded-md border-2 border-black shadow-[2px_2px_0_0_#000] ${i < tempSelectedMoves.length ? 'bg-blue-500' : 'bg-white/5'}`}></div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-6 bg-black/40 border-2 sm:border-4 border-white/5 rounded-xl sm:rounded-3xl custom-scrollbar shadow-inner">
-              {availableMovesDetails.map((m: any) => {
-                const isSelected = tempSelectedMoves.find(sm => sm.name === m.name);
-                return (
-                  <button key={m.name} onClick={() => toggleTempMove(m)} className={`group relative p-2 sm:p-4 border-2 sm:border-4 border-black font-mono text-left transition-all rounded-lg sm:rounded-2xl overflow-hidden ${isSelected ? 'bg-blue-500 scale-95 shadow-[inset_0_0_20px_rgba(0,0,0,0.3)]' : 'bg-white/5 hover:bg-white/10 shadow-[3px_3px_0_0_#000] sm:shadow-[6px_6px_0_0_#000]'}`}>
-                    <div className="relative z-10">
-                      <p className={`font-black text-[9px] sm:text-xs uppercase truncate ${isSelected ? 'text-white' : 'text-white/80'}`}>{getLocalizedMoveName(m)}</p>
-                      <div className="flex justify-between mt-1 sm:mt-2 text-[7px] sm:text-[9px] font-black opacity-60 text-white"><span>P: {m.power || '--'}</span><span>{m.type.name}</span></div>
+
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden px-4 sm:px-8 pb-4 sm:pb-8 gap-4 sm:gap-6">
+              
+              {/* 기술 리스트 및 로드아웃 그리드 */}
+              <div className="flex-[1.5] flex flex-col gap-4 overflow-hidden">
+                {/* 상단 장착 요약 바 */}
+                <div className="bg-black/60 border-2 border-white/5 rounded-2xl p-3 flex gap-2 items-center shrink-0 overflow-x-auto custom-scrollbar shadow-inner">
+                  <span className="text-[10px] font-mono font-black text-blue-500 uppercase tracking-tighter px-3 border-r border-white/10 shrink-0">Loadout</span>
+                  {[...Array(4)].map((_, i) => {
+                    const move = tempSelectedMoves[i];
+                    return (
+                      <div key={i} className={`flex-1 min-w-[120px] h-10 rounded-xl border-2 border-black flex items-center px-3 gap-2 transition-all ${move ? 'bg-blue-600/20 border-blue-500/50' : 'bg-white/5 border-dashed border-white/10 opacity-30'}`}>
+                        {move ? (
+                          <>
+                            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                            <span className="text-[10px] font-mono font-black text-white uppercase truncate">{getLocalizedMoveName(move)}</span>
+                            <button onClick={() => toggleTempMove(move)} className="ml-auto text-white/40 hover:text-white">×</button>
+                          </>
+                        ) : (
+                          <span className="text-[8px] font-mono font-black text-white/20 uppercase tracking-widest">Empty Slot</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-5 bg-black/40 border-2 sm:border-4 border-white/5 rounded-xl sm:rounded-3xl custom-scrollbar shadow-inner">
+                  {isLoadingAvailableMoves ? (
+                    <div className="col-span-full h-full flex flex-col items-center justify-center gap-4 py-20">
+                      <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="font-mono text-white/30 text-xs uppercase tracking-widest">Scanning Moves...</span>
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-4 sm:mt-10 flex flex-col sm:flex-row justify-end gap-3 sm:gap-6 items-center">
-              <span className="sm:mr-auto font-mono text-white/30 text-[8px] sm:text-xs font-black uppercase tracking-widest">{tempSelectedMoves.length} / 4 Slots Filled</span>
-              <div className="flex gap-2 sm:gap-4 w-full sm:w-auto">
-                <button onClick={() => setIsMoveModalOpen(false)} className="flex-1 sm:flex-none px-4 sm:px-10 py-2 sm:py-4 bg-white/5 border-2 sm:border-4 border-black text-white/60 font-mono font-black uppercase rounded-lg sm:rounded-2xl hover:bg-white/10 transition-all text-[10px] sm:text-base">Abort</button>
-                <button onClick={confirmMoveSelection} disabled={tempSelectedMoves.length !== 4} className="flex-1 sm:flex-none px-4 sm:px-10 py-2 sm:py-4 bg-blue-500 border-2 sm:border-4 border-black font-mono font-black uppercase text-white rounded-lg sm:rounded-2xl shadow-[4px_4px_0_0_#000] sm:shadow-[8px_8px_0_0_#000] active:shadow-none active:translate-y-1 disabled:opacity-20 transition-all text-[10px] sm:text-base">Execute</button>
+                  ) : (
+                    availableMovesDetails.map((m: any) => {
+                      const isSelected = tempSelectedMoves.find(sm => sm.name === m.name);
+                      const typeTheme = typeThemes[m.type.name] || { color: '#555', shadow: 'rgba(0,0,0,0.5)' };
+                      return (
+                        <button 
+                          key={m.name} 
+                          onClick={() => toggleTempMove(m)} 
+                          onMouseEnter={() => setHoveredMove(m)}
+                          className={`group relative p-4 border-2 sm:border-4 border-black font-mono text-left transition-all rounded-xl sm:rounded-2xl flex flex-col justify-center ${isSelected ? 'scale-95 ring-2 ring-blue-400/50' : 'hover:scale-[1.02] active:scale-95 shadow-[3px_3px_0_0_#000] sm:shadow-[5px_5px_0_0_#000] grayscale-[0.8] opacity-60 hover:grayscale-0 hover:opacity-100'}`}
+                          style={{ 
+                            backgroundColor: isSelected ? typeTheme.color : 'rgba(255,255,255,0.03)',
+                            height: '100px'
+                          }}
+                        >
+                          {isSelected && <div className="absolute inset-0 bg-white/10 animate-pulse"></div>}
+                          <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                            {isSelected ? (
+                              <span className="px-1.5 py-0.5 bg-white text-black text-[7px] font-black uppercase rounded shadow-sm">Active</span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 bg-black/40 text-white/40 text-[7px] font-black uppercase rounded border border-white/5">Standby</span>
+                            )}
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: typeTheme.color, boxShadow: `0 0 10px ${typeTheme.shadow}` }}></div>
+                          </div>
+                          <div className="relative z-10 w-full">
+                            <p className={`font-mono font-black text-sm sm:text-lg uppercase truncate leading-snug drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${isSelected ? 'text-white' : 'text-white/80'}`}>{getLocalizedMoveName(m)}</p>
+                            <div className={`mt-2 text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] ${isSelected ? 'text-white/90' : 'text-white/40'}`}>{m.type.name}</div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* 상세 정보 패널 */}
+              <div className="w-full lg:w-[400px] h-[400px] lg:h-auto flex-shrink-0 bg-white/5 border-2 sm:border-4 border-black rounded-xl sm:rounded-3xl p-5 sm:p-6 flex flex-col gap-4 overflow-hidden relative group/panel">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
+                {hoveredMove || tempSelectedMoves[tempSelectedMoves.length - 1] ? (
+                  <>
+                    {(() => {
+                      const move = hoveredMove || tempSelectedMoves[tempSelectedMoves.length - 1];
+                      const typeTheme = typeThemes[move.type.name] || { color: '#555', shadow: 'rgba(0,0,0,0.5)' };
+                      return (
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-300 flex flex-col h-full">
+                          <div className="flex justify-between items-start mb-4">
+                            <span className="px-2 py-1 rounded text-[8px] sm:text-[10px] font-black text-white uppercase border border-white/20 shadow-lg" style={{ backgroundColor: typeTheme.color }}>{move.type.name}</span>
+                            <span className="font-mono text-[10px] text-white/30 font-black tracking-tighter">REF_{move.id}</span>
+                          </div>
+                          
+                          <h3 className="text-2xl sm:text-4xl font-mono font-black text-white uppercase mb-3 tracking-tighter leading-tight py-1 drop-shadow-lg shrink-0">{getLocalizedMoveName(move)}</h3>
+                          
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 mb-4">
+                            <p className="text-xs sm:text-base text-white/70 leading-relaxed font-sans border-l-2 border-white/10 pl-4">{getLocalizedMoveDescription(move)}</p>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4 shrink-0">
+                            <div className="bg-black/40 p-3 sm:p-4 rounded-xl border border-white/5">
+                              <span className="block text-[7px] sm:text-[9px] font-black text-white/20 uppercase mb-1">Power</span>
+                              <span className="text-lg sm:text-2xl font-mono font-black text-blue-400">{move.power || '--'}</span>
+                            </div>
+                            <div className="bg-black/40 p-3 sm:p-4 rounded-xl border border-white/5">
+                              <span className="block text-[7px] sm:text-[9px] font-black text-white/20 uppercase mb-1">Accuracy</span>
+                              <span className="text-lg sm:text-2xl font-mono font-black text-blue-400">{move.accuracy || '--'}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 opacity-20">
+                    <svg className="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p className="font-mono text-xs uppercase font-black tracking-widest">{t('Select a move to see details')}</p>
+                  </div>
+                )}
+                
+                {/* 하단 확정 영역 */}
+                <div className="mt-auto pt-4 border-t border-white/5 flex flex-col gap-3 shrink-0">
+                   <div className="flex justify-between items-center px-1">
+                      <span className="text-[10px] font-mono text-white/30 font-black uppercase tracking-widest">{tempSelectedMoves.length} / 4 {t('Selected')}</span>
+                      <div className="flex gap-1">
+                        {[...Array(tempSelectedMoves.length)].map((_, i) => <div key={i} className="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>)}
+                      </div>
+                   </div>
+                   <div className="flex gap-2 sm:gap-3">
+                      <button onClick={() => setIsMoveModalOpen(false)} className="flex-1 py-3 sm:py-3.5 bg-white/5 border-2 border-black text-white/60 font-mono font-black uppercase rounded-xl hover:bg-white/10 transition-all text-[10px] sm:text-xs">{t('Abort')}</button>
+                      <button 
+                        onClick={confirmMoveSelection} 
+                        disabled={tempSelectedMoves.length < 1 || tempSelectedMoves.length > 4} 
+                        className="flex-[2] py-3 sm:py-3.5 bg-blue-500 border-2 border-black font-mono font-black uppercase text-white rounded-xl shadow-[4px_4px_0_0_#000] active:shadow-none active:translate-y-1 disabled:opacity-10 transition-all text-[10px] sm:text-xs"
+                      >
+                        {t('Execute Protocol')}
+                      </button>
+                   </div>
+                </div>
               </div>
             </div>
           </div>

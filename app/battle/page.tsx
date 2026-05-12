@@ -348,17 +348,22 @@ export default function BattlePage() {
                        disabled={isProcessing}
                        onClick={() => executeTurn(move)}
                        className={`group relative h-full p-2 sm:p-3 border-2 sm:border-4 border-black rounded-lg sm:rounded-2xl shadow-[3px_3px_0_0_#000] sm:shadow-[6px_6px_0_0_#000] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all flex flex-col justify-center overflow-hidden disabled:opacity-20`}
-                       style={{ backgroundColor: typeThemes[move.type.name]?.main || '#555' }}
+                       style={{ 
+                         backgroundColor: typeThemes[move.type.name]?.main || '#555',
+                         boxShadow: `inset 0 0 20px rgba(0,0,0,0.2), 6px 6px 0 0 #000, 0 0 15px ${typeThemes[move.type.name]?.neon || 'transparent'}`
+                       }}
                      >
-                       <div className="absolute top-0.5 right-1 px-1 sm:px-2 py-0.5 bg-black/30 rounded text-[6px] sm:text-[8px] font-mono font-black text-white uppercase tracking-widest">{move.type.name}</div>
-                       <div className="relative z-10 text-left">
-                         <p className="font-mono font-black text-[9px] sm:text-lg text-white uppercase tracking-tighter truncate pr-6 sm:pr-10">{getLocalizedMoveName(move)}</p>
-                         <div className="hidden sm:flex gap-3 mt-1.5 opacity-60 font-mono text-[9px] font-black text-white border-t border-white/10 pt-1">
-                           <span>PWR: {move.power || '--'}</span>
-                           <span>ACC: {move.accuracy || '--'}</span>
+                       <div className="absolute top-0 right-0 p-1.5 sm:p-2.5">
+                         <div className="px-2 sm:px-3 py-1 bg-black/40 rounded-lg text-[8px] sm:text-[11px] font-mono font-black text-white uppercase tracking-widest border border-white/20 shadow-lg">{move.type.name}</div>
+                       </div>
+                       <div className="relative z-10 text-left py-1">
+                         <p className="font-mono font-black text-sm sm:text-2xl text-white uppercase tracking-tighter truncate pr-8 sm:pr-12 leading-normal [text-shadow:_0_2px_4px_rgb(0_0_0_/_80%)]">{getLocalizedMoveName(move)}</p>
+                         <div className="hidden sm:flex gap-6 mt-2 opacity-90 font-mono text-[12px] font-black text-white border-t border-white/20 pt-2">
+                           <span className="flex items-center gap-2"><span className="text-[8px] text-white/50 uppercase tracking-widest">Power</span><span className="text-blue-200">{move.power || '--'}</span></span>
+                           <span className="flex items-center gap-2"><span className="text-[8px] text-white/50 uppercase tracking-widest">Accuracy</span><span className="text-blue-200">{move.accuracy || '--'}%</span></span>
                          </div>
                        </div>
-                       <div className={`absolute bottom-0 left-0 w-full h-0.5 sm:h-1 ${currentTurn === 'player1' ? 'bg-blue-400' : 'bg-red-500'} opacity-40`}></div>
+                       <div className={`absolute bottom-0 left-0 w-full h-1 bg-white/20 scale-x-0 group-hover:scale-x-100 transition-transform origin-left`}></div>
                      </button>
                    ))}
                 </div>
