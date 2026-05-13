@@ -249,13 +249,14 @@ export default function BattlePage() {
            </div>
 
            {/* 턴 오버레이 */}
-           {!battleOver && !loading && (
-             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-50 pointer-events-none px-4">
-               <div className={`px-6 sm:px-12 py-2 sm:py-3 bg-black/60 border-y-2 sm:border-y-4 border-blue-500/30 backdrop-blur-xl transition-all duration-500 transform ${isProcessing ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
-                 <p className="font-mono text-white text-sm sm:text-2xl font-black tracking-[0.2em] sm:tracking-[0.3em] uppercase animate-pulse text-center">{activePlayerName} DECISION</p>
-               </div>
-             </div>
-           )}
+            {!battleOver && !loading && (
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-50 pointer-events-none px-4">
+                <div className={`px-4 sm:px-12 py-1.5 sm:py-3 bg-black/60 border-y-2 sm:border-y-4 border-blue-500/30 backdrop-blur-xl transition-all duration-500 transform ${isProcessing ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+                  <p className="font-mono text-white text-[10px] sm:text-2xl font-black tracking-[0.1em] sm:tracking-[0.3em] uppercase animate-pulse text-center">{activePlayerName} DECISION</p>
+                </div>
+              </div>
+            )}
+
         </div>
 
         {/* 하단 제어 센터 (모바일/데스크탑 반응형 슬라이딩) */}
