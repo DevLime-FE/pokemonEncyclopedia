@@ -1,5 +1,4 @@
 import { typeChart } from "../constants/pokemonData";
-import { PokemonType } from "../services/pokeapi";
 
 /**
  * 공격 타입과 방어 포켓몬의 타입들을 바탕으로 데미지 배율을 계산합니다.
@@ -7,16 +6,16 @@ import { PokemonType } from "../services/pokeapi";
  * @param defenderTypes 방어측 포켓몬의 타입 배열
  * @returns 계산된 데미지 배율
  */
-export const getMultiplier = (attackType: string, defenderTypes: PokemonType[]) => {
+export const getMultiplier = (attackType: string, defenderTypes: string[]) => {
   let multiplier = 1;
-  defenderTypes.forEach(d => {
-    const dType = d.type.name;
+  defenderTypes.forEach(dType => {
     if (typeChart[attackType] && typeChart[attackType][dType] !== undefined) {
       multiplier *= typeChart[attackType][dType];
     }
   });
   return multiplier;
 };
+
 
 /**
  * 데미지를 계산합니다.
@@ -41,13 +40,13 @@ export const calculateDamage = (
 /**
  * 포켓몬의 특정 스탯 값을 가져옵니다.
  */
-export const getStatValue = (pokemon: any, statName: string) => 
-  pokemon.stats.find((s: any) => s.stat.name === statName)?.base_stat || 0;
+export const getStatValue = (pokemon: any, statName: string) =>
+  pokemon?.stats?.find((s: any) => s.stat.name === statName)?.base_stat || 0;
 
 /**
  * HP 퍼센트를 계산합니다.
  */
-export const getHpPercentage = (currentHp: number, maxHp: number) => 
+export const getHpPercentage = (currentHp: number, maxHp: number) =>
   Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
 
 /**
