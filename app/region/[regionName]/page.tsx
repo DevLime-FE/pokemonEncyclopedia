@@ -45,6 +45,8 @@ export default function RegionPage() {
   const [selectedOpponent, setSelectedOpponent] = useState<Pokemon | null>(null);
   const [playerSpecies, setPlayerSpecies] = useState<PokemonSpecies | null>(null);
   const [opponentSpecies, setOpponentSpecies] = useState<PokemonSpecies | null>(null);
+  const [showP1Info, setShowP1Info] = useState(false);
+  const [showP2Info, setShowP2Info] = useState(false);
   
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<'player1' | 'player2' | null>(null);
@@ -97,7 +99,9 @@ export default function RegionPage() {
    * 프리미엄 포켓몬 도감 디바이스 (반응형 버전)
    */
   const PokedexSidePanel = ({ pokemon, species, moves, tab, onTabChange, onEdit, onClose, isOpponent }: any) => (
-    <div className={`w-full md:w-[320px] lg:w-[360px] h-[70vh] md:h-[calc(100vh-140px)] flex flex-col bg-[#1a1a1a]/95 border-t-[6px] md:border-t-0 md:border-x-[6px] border-black shadow-[20px_0_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom md:slide-in-from-left z-40`}>
+    <div className={`w-full lg:w-[350px] xl:w-[380px] h-[85vh] lg:h-[calc(100vh-140px)] flex flex-col bg-[#121212]/90 backdrop-blur-2xl border-t-[6px] lg:border-t-0 lg:border-x-[6px] border-black shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-700 ease-out animate-in fade-in zoom-in-95 lg:slide-in-from-left z-40 rounded-t-[2.5rem] lg:rounded-none relative`}>
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full lg:hidden mb-4"></div>
       
       {/* 장치 헤더 */}
       <div className="bg-[#DC0A2D] p-3 sm:p-4 flex items-center justify-between border-b-[4px] sm:border-b-[6px] border-black shrink-0">
@@ -249,9 +253,11 @@ export default function RegionPage() {
     if (!selectedPlayer) {
       setSelectedPlayer(pkmn); setPlayerPokemon(pkmn); setPlayerSpecies(species);
       getRandomMoves(pkmn.moves, 4).then(setPlayerMoves);
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) setShowP1Info(true);
     } else if (!selectedOpponent) {
       setSelectedOpponent(pkmn); setOpponentPokemon(pkmn); setOpponentSpecies(species);
       getRandomMoves(pkmn.moves, 4).then(setOpponentMoves);
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) setShowP2Info(true);
     }
   };
 
@@ -322,20 +328,23 @@ export default function RegionPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
-        {/* P1 상세 (모바일에서는 오버레이) */}
-        {selectedPlayer && (
-          <div className="md:shrink-0 absolute inset-0 md:relative z-40 bg-black/50 md:bg-transparent flex flex-col justify-end md:justify-center">
-            <PokedexSidePanel 
-              pokemon={selectedPlayer} 
-              species={playerSpecies} 
-              moves={playerMoves} 
-              tab={playerPokedexTab} 
-              onTabChange={setPlayerPokedexTab} 
-              onEdit={() => openMoveEditModal('player1')} 
-              onClose={() => setSelectedPlayer(null)}
-            />
+        {/* P1 상세 (lg 미만에서는 자연스러운 바텀 시트 형태) */}
+        {selectedPlayer && (showP1Info || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
+          <div className={`lg:shrink-0 ${ (typeof window !== 'undefined' && window.innerWidth < 1024) ? 'fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-end lg:items-center justify-center' : 'relative z-40 bg-transparent flex flex-col justify-center'}`}>
+            <div className="absolute inset-0 lg:hidden" onClick={() => setShowP1Info(false)}></div>
+            <div className="w-full lg:w-auto transform transition-transform duration-500 ease-out animate-in slide-in-from-bottom lg:slide-in-from-left">
+              <PokedexSidePanel 
+                pokemon={selectedPlayer} 
+                species={playerSpecies} 
+                moves={playerMoves} 
+                tab={playerPokedexTab} 
+                onTabChange={setPlayerPokedexTab} 
+                onEdit={() => openMoveEditModal('player1')} 
+                onClose={() => setShowP1Info(false)}
+              />
+            </div>
           </div>
         )}
 
@@ -349,12 +358,12 @@ export default function RegionPage() {
           ) : (
             <div className={`grid gap-2 sm:gap-4 transition-all duration-700 ${
               (selectedPlayer && selectedOpponent) 
-                ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-5' 
+                ? 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5' 
                 : (selectedPlayer || selectedOpponent) 
-                  ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-7' 
-                  : 'grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10'
+                  ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-7' 
+                  : 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10'
             }`}>
-              {entries.map((entry) => {
+              {entries.map((entry, idx) => {
                 const id = entry.pokemon_species.url.split('/').filter(Boolean).pop();
                 const isP1 = selectedPlayer?.name === entry.pokemon_species.name;
                 const isP2 = selectedOpponent?.name === entry.pokemon_species.name;
@@ -364,14 +373,15 @@ export default function RegionPage() {
                   <div 
                     key={entry.pokemon_species.name} 
                     onClick={() => handleSelect(entry)} 
-                    className={`group relative p-0.5 sm:p-1 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-500 
+                    style={{ animationDelay: `${(idx % 20) * 30}ms` }}
+                    className={`group relative p-0.5 sm:p-1 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 fill-mode-both 
                       ${isP1 && isP2 
-                        ? 'bg-gradient-to-br from-blue-500 to-red-600 scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]' 
+                        ? 'bg-gradient-to-br from-blue-500/80 to-red-600/80 scale-95 shadow-[0_0_25px_rgba(255,255,255,0.4)]' 
                         : isP1 
-                          ? 'bg-blue-500 scale-95 shadow-[0_0_20px_#3b82f6]' 
+                          ? 'bg-blue-500/80 scale-95 shadow-[0_0_20px_rgba(59,130,246,0.6)]' 
                           : isP2 
-                            ? 'bg-red-600 scale-95 shadow-[0_0_20px_#dc2626]' 
-                            : 'bg-white/5 hover:bg-white/10 hover:-translate-y-1 active:scale-95'
+                            ? 'bg-red-600/80 scale-95 shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
+                            : 'bg-white/5 hover:bg-white/10 hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(0,0,0,0.4)] active:scale-95'
                       }`}
                   >
                     <div className="bg-black/30 border-2 border-white/5 rounded-lg sm:rounded-[1.2rem] p-2 sm:p-4 flex flex-col items-center relative overflow-hidden h-full min-h-[100px] sm:min-h-[160px] justify-center">
@@ -394,56 +404,81 @@ export default function RegionPage() {
           )}
         </div>
 
-        {/* P2 상세 (모바일에서는 오버레이) */}
-        {selectedOpponent && (
-          <div className="md:shrink-0 absolute inset-0 md:relative z-40 bg-black/50 md:bg-transparent flex flex-col justify-end md:justify-center">
-            <PokedexSidePanel 
-              pokemon={selectedOpponent} 
-              species={opponentSpecies} 
-              moves={opponentMoves} 
-              tab={opponentPokedexTab} 
-              onTabChange={setOpponentPokedexTab} 
-              onEdit={() => openMoveEditModal('player2')} 
-              onClose={() => setSelectedOpponent(null)} 
-              isOpponent
-            />
+        {/* P2 상세 (lg 미만에서는 자연스러운 바텀 시트 형태) */}
+        {selectedOpponent && (showP2Info || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
+          <div className={`lg:shrink-0 ${ (typeof window !== 'undefined' && window.innerWidth < 1024) ? 'fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-end lg:items-center justify-center' : 'relative z-40 bg-transparent flex flex-col justify-center'}`}>
+            <div className="absolute inset-0 lg:hidden" onClick={() => setShowP2Info(false)}></div>
+            <div className="w-full lg:w-auto transform transition-transform duration-500 ease-out animate-in slide-in-from-bottom lg:slide-in-from-right">
+              <PokedexSidePanel 
+                pokemon={selectedOpponent} 
+                species={opponentSpecies} 
+                moves={opponentMoves} 
+                tab={opponentPokedexTab} 
+                onTabChange={setOpponentPokedexTab} 
+                onEdit={() => openMoveEditModal('player2')} 
+                onClose={() => setShowP2Info(false)} 
+                isOpponent
+              />
+            </div>
           </div>
         )}
       </main>
 
       {/* 하단 컨트롤 패널 (반응형 최적화) */}
-      <footer className="shrink-0 bg-[#1a1a1a] border-t-[4px] sm:border-t-[8px] border-black p-3 sm:p-4 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-10 shadow-2xl">
-        <div className="w-full max-w-5xl flex items-center gap-4 sm:gap-10">
-          <div className="flex-1 flex justify-around items-center bg-black/40 border-2 sm:border-4 border-white/5 p-2 sm:p-4 rounded-2xl sm:rounded-3xl shadow-inner relative">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black border-2 sm:border-4 border-black px-3 py-0.5 rounded-full"><span className="text-[6px] sm:text-[8px] font-mono text-white/40 font-black tracking-[0.3em] sm:tracking-[0.5em] uppercase whitespace-nowrap">Combatant Ready</span></div>
+      <footer className="shrink-0 bg-[#1a1a1a] border-t-[4px] sm:border-t-[8px] border-black p-2 sm:p-4 flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-10 shadow-2xl z-[50]">
+        <div className="w-full max-w-6xl flex items-center gap-3 sm:gap-10">
+          <div className="flex-1 flex justify-around items-center bg-black/40 border-2 sm:border-4 border-white/5 p-1.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-inner relative">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black border-2 sm:border-4 border-black px-2 sm:px-3 py-0.5 rounded-full z-10"><span className="text-[5px] sm:text-[8px] font-mono text-white/40 font-black tracking-[0.2em] sm:tracking-[0.5em] uppercase whitespace-nowrap">{t('Combatant Ready')}</span></div>
             
-            <div className="flex flex-col items-center gap-1 sm:gap-2">
-              <div className={`w-14 h-14 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl border-2 sm:border-4 transition-all duration-500 flex items-center justify-center relative ${selectedPlayer ? 'bg-blue-500/20 border-blue-500 shadow-[0_0_15px_#3b82f6]' : 'bg-white/5 border-white/10 border-dashed opacity-40'}`}>
-                {selectedPlayer && <img src={selectedPlayer.sprites.front_default} className="w-16 h-16 sm:w-28 sm:h-28 max-w-none absolute drop-shadow-lg" style={{ imageRendering: 'pixelated' }} />}
+            <div className="flex flex-col items-center gap-0.5 sm:gap-2">
+              <div 
+                onClick={() => selectedPlayer && setShowP1Info(true)}
+                className={`group/p1 w-10 h-10 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-lg sm:rounded-2xl border-2 sm:border-4 transition-all duration-500 flex items-center justify-center relative cursor-pointer ${selectedPlayer ? 'bg-blue-500/20 border-blue-500 shadow-[0_0_15px_#3b82f6]' : 'bg-white/5 border-white/10 border-dashed opacity-40'}`}
+              >
+                {selectedPlayer && (
+                  <>
+                    <img src={selectedPlayer.sprites.front_default} className="w-12 h-12 sm:w-28 sm:h-28 max-w-none absolute drop-shadow-lg" style={{ imageRendering: 'pixelated' }} />
+                    <div className="absolute inset-0 bg-blue-500/40 opacity-0 group-hover/p1:opacity-100 flex items-center justify-center transition-opacity rounded-lg sm:rounded-2xl lg:hidden">
+                      <span className="text-[8px] font-black text-white">INFO</span>
+                    </div>
+                  </>
+                )}
               </div>
-              <span className="text-[7px] sm:text-[10px] font-mono text-white/60 font-black uppercase tracking-widest truncate max-w-[60px] sm:max-w-none">{selectedPlayer ? getLocalizedName(playerSpecies, selectedPlayer.name) : 'P1'}</span>
+              <span className="text-[6px] sm:text-[10px] font-mono text-white/60 font-black uppercase tracking-widest truncate max-w-[50px] sm:max-w-none">{selectedPlayer ? getLocalizedName(playerSpecies, selectedPlayer.name) : 'P1'}</span>
+            </div>
+            
+            <div className="text-base sm:text-4xl font-mono text-white/10 font-black select-none px-2">VS</div>
+
+            <div className="flex flex-col items-center gap-0.5 sm:gap-2">
+              <div 
+                onClick={() => selectedOpponent && setShowP2Info(true)}
+                className={`group/p2 w-10 h-10 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-lg sm:rounded-2xl border-2 sm:border-4 transition-all duration-500 flex items-center justify-center relative cursor-pointer ${selectedOpponent ? 'bg-red-500/20 border-red-500 shadow-[0_0_15px_#dc2626]' : 'bg-white/5 border-white/10 border-dashed opacity-40'}`}
+              >
+                {selectedOpponent && (
+                  <>
+                    <img src={selectedOpponent.sprites.front_default} className="w-12 h-12 sm:w-28 sm:h-28 max-w-none absolute drop-shadow-lg" style={{ imageRendering: 'pixelated' }} />
+                    <div className="absolute inset-0 bg-red-500/40 opacity-0 group-hover/p2:opacity-100 flex items-center justify-center transition-opacity rounded-lg sm:rounded-2xl lg:hidden">
+                      <span className="text-[8px] font-black text-white">INFO</span>
+                    </div>
+                  </>
+                )}
+              </div>
+              <span className="text-[6px] sm:text-[10px] font-mono text-white/60 font-black uppercase tracking-widest truncate max-w-[50px] sm:max-w-none">{selectedOpponent ? getLocalizedName(opponentSpecies, selectedOpponent.name) : 'P2'}</span>
             </div>
 
-            <div className="text-xl sm:text-4xl font-mono text-white/10 font-black select-none">VS</div>
-
-            <div className="flex flex-col items-center gap-1 sm:gap-2">
-              <div className={`w-14 h-14 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl border-2 sm:border-4 transition-all duration-500 flex items-center justify-center relative ${selectedOpponent ? 'bg-red-500/20 border-red-500 shadow-[0_0_15px_#dc2626]' : 'bg-white/5 border-white/10 border-dashed opacity-40'}`}>
-                {selectedOpponent && <img src={selectedOpponent.sprites.front_default} className="w-16 h-16 sm:w-28 sm:h-28 max-w-none absolute drop-shadow-lg" style={{ imageRendering: 'pixelated' }} />}
-              </div>
-              <span className="text-[7px] sm:text-[10px] font-mono text-white/60 font-black uppercase tracking-widest truncate max-w-[60px] sm:max-w-none">{selectedOpponent ? getLocalizedName(opponentSpecies, selectedOpponent.name) : 'P2'}</span>
-            </div>
           </div>
 
           <button 
             onClick={() => router.push('/battle')} 
             disabled={!selectedPlayer || !selectedOpponent} 
-            className="group relative px-6 sm:px-12 py-3 sm:py-5 bg-yellow-400 border-[4px] sm:border-[8px] border-black rounded-xl sm:rounded-[2rem] shadow-[5px_5px_0_0_#000] sm:shadow-[10px_10px_0_0_#000] active:shadow-none active:translate-x-1 sm:active:translate-x-2 active:translate-y-1 sm:active:translate-y-2 disabled:opacity-20 transition-all overflow-hidden flex-shrink-0"
+            className="group relative px-5 sm:px-12 py-2.5 sm:py-5 bg-yellow-400 border-[3px] sm:border-[8px] border-black rounded-lg sm:rounded-[2rem] shadow-[3px_3px_0_0_#000] sm:shadow-[10px_10px_0_0_#000] active:shadow-none active:translate-x-1 sm:active:translate-x-2 active:translate-y-1 sm:active:translate-y-2 disabled:opacity-20 transition-all overflow-hidden flex-shrink-0"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            <span className="relative z-10 text-xs sm:text-2xl font-mono font-black text-black uppercase tracking-tighter">Initiate</span>
+            <span className="relative z-10 text-[10px] sm:text-2xl font-mono font-black text-black uppercase tracking-tighter">{t('Initiate')}</span>
           </button>
         </div>
       </footer>
+
 
       {/* 기술 편집 모달 (반응형 사이즈) */}
       {isMoveModalOpen && editingPlayer && (
