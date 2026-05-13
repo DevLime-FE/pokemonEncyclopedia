@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Pokemon, MoveDetails } from "../services/pokeapi";
+import { Pokemon, MoveDetails } from "../types/pokemon";
 
 /**
  * 배틀 관련 상태를 관리하는 컨텍스트의 타입 정의

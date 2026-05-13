@@ -1,10 +1,4 @@
-export interface RegionStaticData {
-  id: string;
-  nameKey: string;
-  descKey: string;
-  starters: number[]; // Grass, Fire, Water
-  bgUrl: string;
-}
+import { RegionStaticData } from "../types/region";
 
 export const REGION_DATA: Record<string, RegionStaticData> = {
   kanto: {
