@@ -8,7 +8,7 @@ import { getRandomMoves, getPokemonSpecies } from '@/src/services/pokeapi';
 import { typeThemes } from '@/src/constants/pokemonData';
 import { getMultiplier, calculateDamage, getStatValue, getHpPercentage, getHpColor } from '@/src/utils/battleUtils';
 import { MoveDetails, PokemonSpecies } from '@/src/types/pokemon';
-import { Turn } from '@/src/types/battle';
+import { Turn, StatusEffect } from '@/src/types/battle';
 
 
 export default function BattlePage() {
@@ -30,6 +30,9 @@ export default function BattlePage() {
   const [currentTurn, setCurrentTurn] = useState<Turn>('player1');
   const [isProcessing, setIsProcessing] = useState(false);
   const [damageEffect, setDamageEffect] = useState<'p1' | 'p2' | null>(null);
+  const [playerStatus, setPlayerStatus] = useState<StatusEffect>(null);
+  const [oppStatus, setOppStatus] = useState<StatusEffect>(null);
+
 
   const logBoxRef = useRef<HTMLDivElement>(null);
 
@@ -117,6 +120,19 @@ export default function BattlePage() {
     const damage = calculateDamage(power, attackerAtk, defenderDef, multiplier, isStab);
     
     setDamageEffect(isPlayer1 ? 'p2' : 'p1');
+    // Poison application logic
+    if (move.type.name === 'poison' && multiplier > 0 && Math.random() < 0.3) {
+      if (isPlayer1 && !oppStatus && !opponentPokemon.types.some(t => t.type.name === 'poison' || t.type.name === 'steel')) {
+        setOppStatus('poison');
+        setLogs(prev => [...prev, t('{{name}} was poisoned!', { name: getLocalizedName(opponentSpecies, opponentPokemon.name) })]);
+        await wait(600);
+      } else if (!isPlayer1 && !playerStatus && !playerPokemon.types.some(t => t.type.name === 'poison' || t.type.name === 'steel')) {
+        setPlayerStatus('poison');
+        setLogs(prev => [...prev, t('{{name}} was poisoned!', { name: getLocalizedName(playerSpecies, playerPokemon.name) })]);
+        await wait(600);
+      }
+    }
+
     if (isPlayer1) {
       const newHp = Math.max(0, oppHp - damage);
       setOppHp(newHp);
@@ -144,9 +160,37 @@ export default function BattlePage() {
         setBattleOver(true); setIsProcessing(false); setDamageEffect(null); return;
       }
     }
+
     await wait(600);
     setDamageEffect(null);
     await wait(400);
+
+    // Poison DOT (Damage Over Time) - 자신의 턴이 끝날 때 데미지 입음
+    const attackerStatus = isPlayer1 ? playerStatus : oppStatus;
+    if (attackerStatus === 'poison') {
+      const dotDamage = Math.floor((isPlayer1 ? maxPlayerHp : maxOppHp) / 8);
+      if (isPlayer1) {
+        const nextHp = Math.max(0, playerHp - dotDamage);
+        setPlayerHp(nextHp);
+        setLogs(prev => [...prev, t('{{name}} is hurt by poison!', { name: getLocalizedName(playerSpecies, playerPokemon.name) })]);
+        if (nextHp <= 0) {
+          await wait(1000);
+          setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: getLocalizedName(playerSpecies, playerPokemon.name) })]);
+          setBattleOver(true); setIsProcessing(false); return;
+        }
+      } else {
+        const nextHp = Math.max(0, oppHp - dotDamage);
+        setOppHp(nextHp);
+        setLogs(prev => [...prev, t('{{name}} is hurt by poison!', { name: getLocalizedName(opponentSpecies, opponentPokemon.name) })]);
+        if (nextHp <= 0) {
+          await wait(1000);
+          setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: getLocalizedName(opponentSpecies, opponentPokemon.name) })]);
+          setBattleOver(true); setIsProcessing(false); return;
+        }
+      }
+      await wait(800);
+    }
+
     setCurrentTurn(isPlayer1 ? 'player2' : 'player1');
     setIsProcessing(false);
   };
@@ -209,9 +253,13 @@ export default function BattlePage() {
               <div className="bg-[#1a1a1a]/80 backdrop-blur-md border-2 border-white/10 p-2 sm:p-3 rounded-bl-[1.5rem] sm:rounded-bl-[2rem] rounded-tr-lg shadow-2xl min-w-[160px] sm:min-w-[220px] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-red-500/30"></div>
                 <div className="flex justify-between items-end mb-1 sm:mb-2 border-b border-white/5 pb-1">
-                  <span className="font-mono font-black text-[10px] sm:text-sm uppercase text-white tracking-tighter truncate max-w-[100px]">{getLocalizedName(opponentSpecies, opponentPokemon.name)}</span>
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span className="font-mono font-black text-[10px] sm:text-sm uppercase text-white tracking-tighter truncate max-w-[100px]">{getLocalizedName(opponentSpecies, opponentPokemon.name)}</span>
+                    {oppStatus === 'poison' && <span className="bg-purple-600 text-white text-[6px] sm:text-[8px] font-black px-1 rounded border border-purple-400 animate-pulse">PSN</span>}
+                  </div>
                   <span className="font-mono text-[7px] sm:text-[9px] font-black text-red-500 uppercase">Hostile</span>
                 </div>
+
                 <div className="w-full bg-black/50 h-2 sm:h-3 rounded-full overflow-hidden flex items-center p-[1px] sm:p-[2px] border border-white/10">
                   <div className={`h-full rounded-full transition-all duration-1000 ease-out ${getHpColor(getHpPercentage(oppHp, maxOppHp))}`} style={{ width: `${getHpPercentage(oppHp, maxOppHp)}%` }}></div>
                 </div>
@@ -235,9 +283,13 @@ export default function BattlePage() {
               <div className="bg-[#1a1a1a]/80 backdrop-blur-md border-2 border-white/10 p-2 sm:p-4 rounded-br-[1.5rem] sm:rounded-br-[2rem] rounded-tl-lg shadow-2xl min-w-[180px] sm:min-w-[250px] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-blue-400/30"></div>
                 <div className="flex justify-between items-end mb-1 sm:mb-2 border-b border-white/5 pb-1">
-                  <span className="font-mono font-black text-xs sm:text-lg uppercase text-white tracking-tighter truncate max-w-[120px]">{getLocalizedName(playerSpecies, playerPokemon.name)}</span>
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span className="font-mono font-black text-xs sm:text-lg uppercase text-white tracking-tighter truncate max-w-[120px]">{getLocalizedName(playerSpecies, playerPokemon.name)}</span>
+                    {playerStatus === 'poison' && <span className="bg-purple-600 text-white text-[7px] sm:text-[10px] font-black px-1.5 rounded border border-purple-400 animate-pulse">PSN</span>}
+                  </div>
                   <span className="font-mono text-[8px] sm:text-[10px] font-black text-blue-400 uppercase">Ally</span>
                 </div>
+
                 <div className="w-full bg-black/50 h-3 sm:h-4 rounded-full overflow-hidden flex items-center p-[1px] sm:p-[2px] border border-white/10">
                   <div className={`h-full rounded-full transition-all duration-1000 ease-out ${getHpColor(getHpPercentage(playerHp, maxPlayerHp))}`} style={{ width: `${getHpPercentage(playerHp, maxPlayerHp)}%` }}></div>
                 </div>

@@ -1,6 +1,7 @@
 import { MoveDetails, Pokemon, PokemonSpecies } from "./pokemon";
 
 export type Turn = 'player1' | 'player2';
+export type StatusEffect = 'poison' | null;
 
 export interface BattleState {
   logs: string[];
@@ -15,4 +16,7 @@ export interface BattleState {
   currentTurn: Turn;
   isProcessing: boolean;
   damageEffect: 'p1' | 'p2' | null;
+  playerStatus: StatusEffect;
+  opponentStatus: StatusEffect;
 }
+
