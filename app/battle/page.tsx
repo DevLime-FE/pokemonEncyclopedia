@@ -154,7 +154,7 @@ export default function BattlePage() {
     await wait(800);
     
     // Poison application logic
-    if (move.type.name === 'poison' && multiplier > 0 && Math.random() < 0.3) {
+    if (move.type.name === 'poison' && multiplier > 0) {
       if (isPlayer1 && !oppStatus && !opponentPokemon?.types.some(t => t.type.name === 'poison' || t.type.name === 'steel')) {
         setOppStatus('poison');
         setLogs(prev => [...prev, t('{{name}} was poisoned!', { name: getLocalizedName(opponentSpecies, opponentPokemon?.name || '') })]);
@@ -287,22 +287,29 @@ export default function BattlePage() {
             )}
 
            <div className={`absolute top-[5%] right-[5%] sm:top-[8%] sm:right-[8%] flex flex-col items-end gap-2 sm:gap-3 z-10 animate-in slide-in-from-right duration-700 ${damageEffect === 'p2' && lastMultiplier > 1 ? 'animate-screen-shake' : ''}`}>
-              <div className="bg-[#1a1a1a]/80 backdrop-blur-md border-2 border-white/10 p-2 sm:p-3 rounded-3xl sm:rounded-[3rem] shadow-2xl min-w-[180px] sm:min-w-[280px] relative overflow-hidden">
+              <div className="bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl min-w-[200px] sm:min-w-[300px] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-red-500/30"></div>
                 <div className="flex justify-between items-end mb-1 sm:mb-2 border-b border-white/5 pb-1">
                   <div className="flex items-center gap-1.5 overflow-hidden">
-                    <span className="font-mono font-black text-[10px] sm:text-sm uppercase text-white tracking-tighter truncate max-w-[100px]">{getLocalizedName(opponentSpecies, opponentPokemon.name)}</span>
+                    <span className="font-mono font-black text-xs sm:text-lg uppercase text-white tracking-tighter truncate max-w-[120px]">{getLocalizedName(opponentSpecies, opponentPokemon.name)}</span>
                     {oppStatus === 'poison' && <span className="bg-purple-600 text-white text-[6px] sm:text-[8px] font-black px-1 rounded border border-purple-400 animate-pulse">PSN</span>}
                   </div>
-                  <span className="font-mono text-[7px] sm:text-[9px] font-black text-red-500 uppercase">Hostile</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex gap-1">
+                      {opponentPokemon.types.map(t => (
+                        <span key={t.type.name} className="px-1.5 py-0.5 text-[6px] sm:text-[8px] font-black text-white rounded border border-white/10 uppercase" style={{ backgroundColor: `${typeThemes[t.type.name]?.main || '#555'}88` }}>
+                          {t.type.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="w-full bg-black/50 h-2 sm:h-3 rounded-full overflow-hidden flex items-center p-[1px] sm:p-[2px] border border-white/10">
                   <div className={`h-full rounded-full transition-all duration-1000 ease-out ${getHpColor(getHpPercentage(oppHp, maxOppHp))}`} style={{ width: `${getHpPercentage(oppHp, maxOppHp)}%` }}></div>
                 </div>
-                <div className="flex justify-between mt-1 font-mono text-[7px] sm:text-[9px] font-black text-white/40">
-                  <div className="hidden sm:flex gap-1">{opponentPokemon.types.map(t => <span key={t.type.name} className="px-1.5 py-0.5 bg-white/5 rounded-md uppercase border border-white/10">{t.type.name}</span>)}</div>
-                  <span className="text-white/60 tracking-widest">{Math.max(0, oppHp)} / {maxOppHp}</span>
+                <div className="flex justify-end mt-1 font-mono text-[7px] sm:text-[9px] font-black text-white/60">
+                  <span className="tracking-widest">{Math.max(0, oppHp)} / {maxOppHp}</span>
                 </div>
               </div>
               <div className={`relative transition-all duration-300
@@ -310,10 +317,10 @@ export default function BattlePage() {
                 ${attackAnim === 'p2' && motionType === 'physical' ? 'animate-lunge-p2' : ''}
                 ${attackAnim === 'p2' && motionType === 'special' ? 'animate-vibrate scale-105' : ''}`}>
                 
-                {/* 데미지 숫자 팝업 */}
+                {/* 데미지 숫자 팝업 (위치 및 크기 조정) */}
                 {hitDamage?.type === 'p2' && (
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-damage-popup">
-                    <span className="text-2xl sm:text-5xl font-mono font-black text-red-500 [text-shadow:_0_4px_10px_rgba(0,0,0,0.5),_0_0_20px_#ef4444]">-{hitDamage.value}</span>
+                  <div className="absolute -top-12 left-3/4 -translate-x-1/2 z-50 pointer-events-none animate-damage-popup">
+                    <span className="text-xl sm:text-3xl font-mono font-black text-red-500 [text-shadow:_0_2px_8px_rgba(0,0,0,0.8),_0_0_15px_#ef4444]">-{hitDamage.value}</span>
                   </div>
                 )}
 
@@ -341,10 +348,10 @@ export default function BattlePage() {
                 ${attackAnim === 'p1' && motionType === 'physical' ? 'animate-lunge-p1' : ''}
                 ${attackAnim === 'p1' && motionType === 'special' ? 'animate-vibrate scale-105' : ''}`}>
                 
-                {/* 데미지 숫자 팝업 */}
+                {/* 데미지 숫자 팝업 (위치 및 크기 조정) */}
                 {hitDamage?.type === 'p1' && (
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-damage-popup">
-                    <span className="text-2xl sm:text-5xl font-mono font-black text-red-500 [text-shadow:_0_4px_10px_rgba(0,0,0,0.5),_0_0_20px_#ef4444]">-{hitDamage.value}</span>
+                  <div className="absolute -top-12 left-1/4 -translate-x-1/2 z-50 pointer-events-none animate-damage-popup">
+                    <span className="text-xl sm:text-3xl font-mono font-black text-red-500 [text-shadow:_0_2px_8px_rgba(0,0,0,0.8),_0_0_15px_#ef4444]">-{hitDamage.value}</span>
                   </div>
                 )}
 
@@ -364,22 +371,29 @@ export default function BattlePage() {
                   </div>
                 )}
               </div>
-              <div className="bg-[#1a1a1a]/80 backdrop-blur-md border-2 border-white/10 p-2 sm:p-4 rounded-3xl sm:rounded-[3rem] shadow-2xl min-w-[180px] sm:min-w-[280px] relative overflow-hidden">
+              <div className="bg-[#1a1a1a]/70 backdrop-blur-xl border border-white/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl min-w-[200px] sm:min-w-[300px] relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-blue-400/30"></div>
                 <div className="flex justify-between items-end mb-1 sm:mb-2 border-b border-white/5 pb-1">
                   <div className="flex items-center gap-1.5 overflow-hidden">
                     <span className="font-mono font-black text-xs sm:text-lg uppercase text-white tracking-tighter truncate max-w-[120px]">{getLocalizedName(playerSpecies, playerPokemon.name)}</span>
                     {playerStatus === 'poison' && <span className="bg-purple-600 text-white text-[7px] sm:text-[10px] font-black px-1.5 rounded border border-purple-400 animate-pulse">PSN</span>}
                   </div>
-                  <span className="font-mono text-[8px] sm:text-[10px] font-black text-blue-400 uppercase">Ally</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex gap-1">
+                      {playerPokemon.types.map(t => (
+                        <span key={t.type.name} className="px-1.5 py-0.5 text-[6px] sm:text-[8px] font-black text-white rounded border border-white/10 uppercase" style={{ backgroundColor: `${typeThemes[t.type.name]?.main || '#555'}88` }}>
+                          {t.type.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="w-full bg-black/50 h-3 sm:h-4 rounded-full overflow-hidden flex items-center p-[1px] sm:p-[2px] border border-white/10">
                   <div className={`h-full rounded-full transition-all duration-1000 ease-out ${getHpColor(getHpPercentage(playerHp, maxPlayerHp))}`} style={{ width: `${getHpPercentage(playerHp, maxPlayerHp)}%` }}></div>
                 </div>
-                <div className="flex justify-between mt-1 sm:mt-2 font-mono text-[8px] sm:text-[10px] font-black text-white/40">
-                  <div className="hidden sm:flex gap-1.5">{playerPokemon.types.map(t => <span key={t.type.name} className="px-2 py-0.5 bg-white/5 rounded-md uppercase border border-white/10">{t.type.name}</span>)}</div>
-                  <span className="text-white/60 tracking-[0.1em] sm:tracking-[0.2em]">{Math.max(0, playerHp)} / {maxPlayerHp}</span>
+                <div className="flex justify-end mt-1 sm:mt-2 font-mono text-[8px] sm:text-[10px] font-black text-white/60">
+                  <span className="tracking-[0.1em] sm:tracking-[0.2em]">{Math.max(0, playerHp)} / {maxPlayerHp}</span>
                 </div>
               </div>
            </div>
@@ -387,7 +401,7 @@ export default function BattlePage() {
             {!battleOver && !loading && (
               <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-50 pointer-events-none px-4">
                 <div className={`px-4 sm:px-12 py-1.5 sm:py-3 bg-black/60 border-y-2 sm:border-y-4 border-blue-500/30 backdrop-blur-xl transition-all duration-500 transform ${isProcessing ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
-                  <p className="font-mono text-white text-[10px] sm:text-2xl font-black tracking-[0.1em] sm:tracking-[0.3em] uppercase animate-pulse text-center">{activePlayerName} DECISION</p>
+                  <p className="font-mono text-white text-[10px] sm:text-2xl font-black tracking-[0.1em] sm:tracking-[0.3em] uppercase animate-pulse text-center">{activePlayerName} TURN</p>
                 </div>
               </div>
             )}
@@ -405,9 +419,10 @@ export default function BattlePage() {
                 : 'left-[calc(35%+0.5rem)] sm:left-[calc(35%+0.75rem)] w-[calc(65%-0.5rem)] sm:w-[calc(65%-0.75rem)] bg-red-900/20 shadow-[0_0_40px_rgba(239,68,68,0.2)]'
             }`}
           >
-             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 sm:px-4 sm:py-1 bg-black border-2 border-white/10 rounded-full z-30">
+             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 sm:px-4 sm:py-1 bg-black border-2 border-white/10 rounded-full z-30 flex items-center gap-2">
+                <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full animate-pulse ${currentTurn === 'player1' ? 'bg-blue-400 shadow-[0_0_8px_#60a5fa]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'}`}></div>
                 <span className={`text-[7px] sm:text-[8px] font-mono font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] ${currentTurn === 'player1' ? 'text-blue-400' : 'text-red-500'}`}>
-                  {currentTurn === 'player1' ? 'P1_ACTIVE' : 'P2_ACTIVE'}
+                  {currentTurn === 'player1' ? 'PLAYER_01' : 'PLAYER_02'}
                 </span>
              </div>
 
@@ -531,9 +546,9 @@ export default function BattlePage() {
         }
          @keyframes damage-popup {
            0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
-           20% { transform: translate(-50%, -40px) scale(1.2); opacity: 1; }
-           80% { transform: translate(-50%, -60px) scale(1); opacity: 1; }
-           100% { transform: translate(-50%, -80px) scale(0.8); opacity: 0; }
+           20% { transform: translate(-50%, -30px) scale(1.1); opacity: 1; }
+           70% { transform: translate(-50%, -50px) scale(1); opacity: 1; }
+           100% { transform: translate(-50%, -70px) scale(0.8); opacity: 0; }
          }
          @keyframes screen-shake {
            0%, 100% { transform: translate(0, 0); }
