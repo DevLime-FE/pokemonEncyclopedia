@@ -66,7 +66,20 @@ const resources = {
       "special-attack": "특수공격",
       "special-defense": "특수방어",
       "speed": "스피드",
-      "ACCESS": "접속"
+      "ACCESS": "접속",
+      "Neural Sync Node": "통신 연결 상태",
+      "Active Link: Localhost.Mainframe": "연결 상태: 정상",
+      "Start Synchronization": "연결 확인 시작",
+      "Est. Time: 4.5 Seconds": "예상 시간: 약 5초",
+      "Ping_Lat": "응답 속도",
+      "Flow_Rate": "다운로드 속도",
+      "Analyzing Signal Integrity...": "인터넷 신호 분석 중...",
+      "Response Delay": "응답 지연",
+      "Sync Velocity": "전송 속도",
+      "Link Optimized": "연결 최적화 완료",
+      "Protocol Integrity: 99.8%": "연결 품질: 매우 좋음",
+      "System Status: Stable": "시스템 상태: 안정",
+      "Re-initialize Calibration": "다시 측정하기"
     }
   },
   en: {
@@ -132,7 +145,20 @@ const resources = {
       "special-attack": "SP.ATK",
       "special-defense": "SP.DEF",
       "speed": "SPD",
-      "ACCESS": "ACCESS"
+      "ACCESS": "ACCESS",
+      "Neural Sync Node": "Connection Status",
+      "Active Link: Localhost.Mainframe": "Status: Active",
+      "Start Synchronization": "Start Check",
+      "Est. Time: 4.5 Seconds": "Est. Time: 5s",
+      "Ping_Lat": "Latency",
+      "Flow_Rate": "Download",
+      "Analyzing Signal Integrity...": "Analyzing connection...",
+      "Response Delay": "Response Delay",
+      "Sync Velocity": "Transfer Speed",
+      "Link Optimized": "Link Optimized",
+      "Protocol Integrity: 99.8%": "Connection Quality: Great",
+      "System Status: Stable": "System: Stable",
+      "Re-initialize Calibration": "Re-test"
     }
   },
   ja: {
@@ -197,8 +223,21 @@ const resources = {
       "defense": "방어",
       "special-attack": "특수공격",
       "special-defense": "특수방어",
-      "speed": "스피드",
-      "ACCESS": "アクセス"
+      "speed": "すばやさ",
+      "ACCESS": "アクセス",
+      "Neural Sync Node": "通信接続状態",
+      "Active Link: Localhost.Mainframe": "接続状態: 正常",
+      "Start Synchronization": "接続確認開始",
+      "Est. Time: 4.5 Seconds": "予想時間: 約5秒",
+      "Ping_Lat": "応答速度",
+      "Flow_Rate": "ダウンロード速度",
+      "Analyzing Signal Integrity...": "接続信号を分析中...",
+      "Response Delay": "応答遅延",
+      "Sync Velocity": "転送速度",
+      "Link Optimized": "接続最適化完了",
+      "Protocol Integrity: 99.8%": "接続品質: 非常に良い",
+      "System Status: Stable": "システム状態: 安定",
+      "Re-initialize Calibration": "もう一度測定"
     }
   }
 };

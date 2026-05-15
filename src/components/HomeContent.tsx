@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { REGION_DATA } from '../constants/regionData';
+import NeuralLinkSpeedTest from './NeuralLinkSpeedTest';
 
 export default function HomeContent() {
   const { t } = useTranslation();
@@ -11,6 +12,7 @@ export default function HomeContent() {
   const regions = Object.values(REGION_DATA);
   const [selectedRegion, setSelectedRegion] = useState(regions[0]);
   const [mounted, setMounted] = useState(false);
+  const [showSpeedTest, setShowSpeedTest] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -46,13 +48,16 @@ export default function HomeContent() {
             <h1 className="text-lg sm:text-2xl font-mono text-white uppercase font-black tracking-tighter leading-none">Pokedex Terminal</h1>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-6">
-          <div className="flex flex-col items-end">
+        <div 
+          className="hidden md:flex items-center gap-6 cursor-pointer group/link hover:opacity-100 transition-all"
+          onClick={() => setShowSpeedTest(true)}
+        >
+          <div className="flex flex-col items-end group-hover/link:translate-x-[-4px] transition-transform">
             <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Protocol</span>
-            <span className="text-xs font-mono text-blue-400 font-black uppercase">Neural-Link</span>
+            <span className="text-xs font-mono text-blue-400 font-black uppercase group-hover/link:text-white transition-colors">Neural-Link</span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center animate-pulse">
-            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+          <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center animate-pulse group-hover/link:scale-110 group-hover/link:bg-blue-500/40 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+            <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_white]"></div>
           </div>
         </div>
       </header>
@@ -192,6 +197,12 @@ export default function HomeContent() {
           </div>
         </div>
       </footer>
+
+      {/* Speed Test Modal */}
+      <NeuralLinkSpeedTest 
+        isOpen={showSpeedTest} 
+        onClose={() => setShowSpeedTest(false)} 
+      />
 
       <style jsx global>{`
         @keyframes scan {
