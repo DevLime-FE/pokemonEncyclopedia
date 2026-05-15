@@ -40,6 +40,7 @@ export default function BattlePage() {
   const [playerStatus, setPlayerStatus] = useState<StatusEffect>(null);
   const [oppStatus, setOppStatus] = useState<StatusEffect>(null);
   const [fainting, setFainting] = useState<'p1' | 'p2' | null>(null);
+  const [winner, setWinner] = useState<{ player: string; pokemon: string } | null>(null);
 
 
   const logBoxRef = useRef<HTMLDivElement>(null);
@@ -179,6 +180,8 @@ export default function BattlePage() {
       if (newHp <= 0) {
         setFainting('p2');
         await wait(1500);
+        const winName = getLocalizedName(playerSpecies, playerPokemon!.name);
+        setWinner({ player: '1 PLAYER', pokemon: winName });
         setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: getLocalizedName(defenderSpecies, defender.name) })]);
         setBattleOver(true); setIsProcessing(false); setDamageEffect(null); return;
       }
@@ -193,6 +196,8 @@ export default function BattlePage() {
       if (newHp <= 0) {
         setFainting('p1');
         await wait(1500);
+        const winName = getLocalizedName(opponentSpecies, opponentPokemon!.name);
+        setWinner({ player: '2 PLAYER', pokemon: winName });
         setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: getLocalizedName(defenderSpecies, defender.name) })]);
         setBattleOver(true); setIsProcessing(false); setDamageEffect(null); return;
       }
@@ -214,6 +219,8 @@ export default function BattlePage() {
         if (nextHp <= 0) {
           setFainting('p1');
           await wait(1500);
+          const winName = getLocalizedName(opponentSpecies, opponentPokemon!.name);
+          setWinner({ player: '2PLAYER', pokemon: winName });
           setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: getLocalizedName(playerSpecies, playerPokemon?.name || '') })]);
           setBattleOver(true); setIsProcessing(false); return;
         }
@@ -224,6 +231,8 @@ export default function BattlePage() {
         if (nextHp <= 0) {
           setFainting('p2');
           await wait(1500);
+          const winName = getLocalizedName(playerSpecies, playerPokemon!.name);
+          setWinner({ player: '1PLAYER', pokemon: winName });
           setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: getLocalizedName(opponentSpecies, opponentPokemon?.name || '') })]);
           setBattleOver(true); setIsProcessing(false); return;
         }
@@ -336,14 +345,14 @@ export default function BattlePage() {
                 <div className="absolute inset-0 border border-white/20 rounded-[50%]"></div>
               </div>
 
-                <img 
-                  src={opponentPokemon.sprites.front_default} 
-                  className={`w-24 h-24 sm:w-48 sm:h-48 relative z-10 transition-all duration-500 
+              <img
+                src={opponentPokemon.sprites.front_default}
+                className={`w-24 h-24 sm:w-48 sm:h-48 relative z-10 transition-all duration-500 
                     ${currentTurn === 'player2' ? 'scale-110' : 'scale-100 opacity-60 grayscale-[30%]'} 
                     ${hitFlash === 'p2' ? 'brightness-[10] contrast-[2] transition-none' : ''}
-                    ${fainting === 'p2' ? 'animate-faint pointer-events-none' : ''}`} 
-                  style={{ imageRendering: 'pixelated' }} 
-                />
+                    ${fainting === 'p2' ? 'animate-faint pointer-events-none' : ''}`}
+                style={{ imageRendering: 'pixelated' }}
+              />
 
               {/* 액티브 인디케이터 */}
               {currentTurn === 'player2' && !isProcessing && (
@@ -374,14 +383,14 @@ export default function BattlePage() {
                 <div className="absolute inset-0 border border-white/20 rounded-[50%]"></div>
               </div>
 
-                <img 
-                  src={playerPokemon.sprites.front_default} 
-                  className={`w-28 h-28 sm:w-52 sm:h-52 relative z-10 transition-all duration-500 scale-x-[-1] 
+              <img
+                src={playerPokemon.sprites.front_default}
+                className={`w-28 h-28 sm:w-52 sm:h-52 relative z-10 transition-all duration-500 scale-x-[-1] 
                     ${currentTurn === 'player1' ? 'scale-x-[-1.1] scale-y-[1.1]' : 'scale-x-[-1] opacity-60 grayscale-[30%]'} 
                     ${hitFlash === 'p1' ? 'brightness-[10] contrast-[2] transition-none' : ''}
-                    ${fainting === 'p1' ? 'animate-faint pointer-events-none' : ''}`} 
-                  style={{ imageRendering: 'pixelated' }} 
-                />
+                    ${fainting === 'p1' ? 'animate-faint pointer-events-none' : ''}`}
+                style={{ imageRendering: 'pixelated' }}
+              />
 
               {/* 액티브 인디케이터 */}
               {currentTurn === 'player1' && !isProcessing && (
@@ -425,6 +434,42 @@ export default function BattlePage() {
             </div>
           )}
 
+          {battleOver && winner && (
+            <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-700">
+              <div className="flex flex-col items-center animate-in zoom-in-95 duration-700">
+
+                {/* 배경 후광 효과 */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-yellow-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-yellow-500"></div>
+                    <span className="text-yellow-500 font-mono font-black text-xs sm:text-sm uppercase tracking-[0.6em] animate-pulse">Battle Analysis Finalized</span>
+                    <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-yellow-500"></div>
+                  </div>
+
+                  <h2 className="text-5xl sm:text-7xl font-mono font-black text-white uppercase tracking-tighter leading-tight mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                    {winner.player} <span className="text-yellow-500">VICTORY</span>
+                  </h2>
+
+                  <div className="relative px-10 py-4 bg-white/5 border-y border-white/10 backdrop-blur-md overflow-hidden group min-w-[280px]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <p className="text-xl sm:text-2xl font-mono font-black text-white/80 uppercase tracking-[0.3em] leading-none">
+                      {winner.pokemon}
+                    </p>
+                  </div>
+
+                  <div className="mt-8 flex flex-col items-center gap-4">
+                    <div className="flex gap-2">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="w-2 h-2 bg-yellow-500 rotate-45 animate-bounce" style={{ animationDelay: `${i * 0.1}s` }}></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 하단 제어 센터 (모바일/데스크탑 반응형 슬라이딩) */}
@@ -433,8 +478,8 @@ export default function BattlePage() {
           {/* 커맨드 콘솔 */}
           <div
             className={`absolute top-0 h-full transition-all duration-700 ease-in-out z-20 border-[4px] sm:border-[6px] border-black rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 flex flex-col shadow-2xl ${currentTurn === 'player1'
-                ? 'left-0 w-[calc(65%-0.5rem)] sm:w-[calc(65%-0.75rem)] bg-blue-900/20 shadow-[0_0_40px_rgba(59,130,246,0.2)]'
-                : 'left-[calc(35%+0.5rem)] sm:left-[calc(35%+0.75rem)] w-[calc(65%-0.5rem)] sm:w-[calc(65%-0.75rem)] bg-red-900/20 shadow-[0_0_40px_rgba(239,68,68,0.2)]'
+              ? 'left-0 w-[calc(65%-0.5rem)] sm:w-[calc(65%-0.75rem)] bg-blue-900/20 shadow-[0_0_40px_rgba(59,130,246,0.2)]'
+              : 'left-[calc(35%+0.5rem)] sm:left-[calc(35%+0.75rem)] w-[calc(65%-0.5rem)] sm:w-[calc(65%-0.75rem)] bg-red-900/20 shadow-[0_0_40px_rgba(239,68,68,0.2)]'
               }`}
           >
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 sm:px-4 sm:py-1 bg-black border-2 border-white/10 rounded-full z-30 flex items-center gap-2">
@@ -506,8 +551,8 @@ export default function BattlePage() {
           <div
             ref={logBoxRef}
             className={`absolute top-0 h-full transition-all duration-700 ease-in-out z-10 bg-[#0a0a0a] border-[4px] sm:border-[6px] border-black rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-4 overflow-y-auto shadow-inner custom-scrollbar ${currentTurn === 'player1'
-                ? 'right-0 w-[calc(35%-0.5rem)] sm:w-[calc(35%-0.75rem)]'
-                : 'right-[calc(65%+0.5rem)] sm:right-[calc(65%+0.75rem)] w-[calc(35%-0.5rem)] sm:w-[calc(35%-0.75rem)]'
+              ? 'right-0 w-[calc(35%-0.5rem)] sm:w-[calc(35%-0.75rem)]'
+              : 'right-[calc(65%+0.5rem)] sm:right-[calc(65%+0.75rem)] w-[calc(35%-0.5rem)] sm:w-[calc(35%-0.75rem)]'
               }`}
           >
             <div className="absolute top-1.5 right-3 text-[6px] sm:text-[8px] font-black text-white/10 uppercase tracking-widest">Live</div>
