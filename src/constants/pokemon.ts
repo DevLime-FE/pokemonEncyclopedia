@@ -1,0 +1,20 @@
+export const typeThemes: Record<string, { color: string; shadow: string }> = {
+  normal: { color: '#A8A878', shadow: 'rgba(168, 168, 120, 0.5)' },
+  fire: { color: '#F08030', shadow: 'rgba(240, 128, 48, 0.5)' },
+  water: { color: '#6890F0', shadow: 'rgba(104, 144, 240, 0.5)' },
+  electric: { color: '#F8D030', shadow: 'rgba(248, 208, 48, 0.5)' },
+  grass: { color: '#78C850', shadow: 'rgba(120, 200, 80, 0.5)' },
+  ice: { color: '#98D8D8', shadow: 'rgba(152, 216, 216, 0.5)' },
+  fighting: { color: '#C03028', shadow: 'rgba(192, 48, 40, 0.5)' },
+  poison: { color: '#A040A0', shadow: 'rgba(160, 64, 160, 0.5)' },
+  ground: { color: '#E0C068', shadow: 'rgba(224, 192, 104, 0.5)' },
+  flying: { color: '#A890F0', shadow: 'rgba(168, 144, 240, 0.5)' },
+  psychic: { color: '#F85888', shadow: 'rgba(248, 88, 136, 0.5)' },
+  bug: { color: '#A8B820', shadow: 'rgba(168, 184, 32, 0.5)' },
+  rock: { color: '#B8A038', shadow: 'rgba(184, 160, 56, 0.5)' },
+  ghost: { color: '#705898', shadow: 'rgba(112, 88, 152, 0.5)' },
+  dragon: { color: '#7038F8', shadow: 'rgba(112, 56, 248, 0.5)' },
+  dark: { color: '#705848', shadow: 'rgba(112, 88, 72, 0.5)' },
+  steel: { color: '#B8B8D0', shadow: 'rgba(184, 184, 208, 0.5)' },
+  fairy: { color: '#EE99AC', shadow: 'rgba(238, 153, 172, 0.5)' }
+};
