@@ -251,7 +251,7 @@ export default function BattlePage() {
   const maxOppHp = (getStatValue(opponentPokemon, 'hp') || 50) * 3;
 
   const activeMoves = currentTurn === 'player1' ? playerMoves : opponentMoves;
-  const activePlayerName = currentTurn === 'player1' ? t('Player 1') : t('Player 2');
+  const activePlayerName = currentTurn === 'player1' ? 'PLAYER 1' : 'PLAYER 2';
 
   return (
     <div className="h-screen bg-[#050505] text-white font-sans overflow-hidden flex flex-col selection:bg-blue-500">
