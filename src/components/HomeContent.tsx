@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import PokedexSearch from './PokedexSearch';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { REGION_DATA } from '../constants/regionData';
@@ -13,6 +14,7 @@ export default function HomeContent() {
   const [selectedRegion, setSelectedRegion] = useState(regions[0]);
   const [mounted, setMounted] = useState(false);
   const [showSpeedTest, setShowSpeedTest] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -48,16 +50,31 @@ export default function HomeContent() {
             <h1 className="text-lg sm:text-2xl font-mono text-white uppercase font-black tracking-tighter leading-none">Pokedex Terminal</h1>
           </div>
         </div>
-        <div 
-          className="hidden md:flex items-center gap-6 cursor-pointer group/link hover:opacity-100 transition-all"
-          onClick={() => setShowSpeedTest(true)}
-        >
-          <div className="flex flex-col items-end group-hover/link:translate-x-[-4px] transition-transform">
-            <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Protocol</span>
-            <span className="text-xs font-mono text-blue-400 font-black uppercase group-hover/link:text-white transition-colors">Neural-Link</span>
+        <div className="flex items-center gap-2 sm:gap-6">
+          <div 
+            className="flex items-center gap-3 cursor-pointer group/link hover:opacity-100 transition-all bg-white/5 px-4 py-2 rounded-xl border border-white/10 hover:border-blue-500/50"
+            onClick={() => setShowSearch(true)}
+          >
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/50 flex items-center justify-center group-hover/link:bg-blue-500/40 transition-all">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <div className="hidden sm:flex flex-col items-start group-hover/link:translate-x-[4px] transition-transform">
+              <span className="text-[7px] font-black text-white/30 uppercase tracking-widest">Database</span>
+              <span className="text-[10px] font-mono text-blue-400 font-black uppercase group-hover/link:text-white transition-colors">{t('SEARCH')}</span>
+            </div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center animate-pulse group-hover/link:scale-110 group-hover/link:bg-blue-500/40 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-            <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_white]"></div>
+
+          <div 
+            className="hidden md:flex items-center gap-6 cursor-pointer group/link hover:opacity-100 transition-all"
+            onClick={() => setShowSpeedTest(true)}
+          >
+            <div className="flex flex-col items-end group-hover/link:translate-x-[-4px] transition-transform">
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Protocol</span>
+              <span className="text-xs font-mono text-blue-400 font-black uppercase group-hover/link:text-white transition-colors">Neural-Link</span>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center animate-pulse group-hover/link:scale-110 group-hover/link:bg-blue-500/40 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+              <div className="w-3 h-3 bg-blue-400 rounded-full shadow-[0_0_10px_white]"></div>
+            </div>
           </div>
         </div>
       </header>
@@ -202,6 +219,11 @@ export default function HomeContent() {
       <NeuralLinkSpeedTest 
         isOpen={showSpeedTest} 
         onClose={() => setShowSpeedTest(false)} 
+      />
+
+      <PokedexSearch
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
       />
 
       <style jsx global>{`

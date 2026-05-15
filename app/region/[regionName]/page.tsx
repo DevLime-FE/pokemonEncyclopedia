@@ -57,6 +57,9 @@ export default function RegionPage() {
   
   const [playerPokedexTab, setPlayerPokedexTab] = useState<'info' | 'moves'>('info');
   const [opponentPokedexTab, setOpponentPokedexTab] = useState<'info' | 'moves'>('info');
+  
+  const [pokemonSearchTerm, setPokemonSearchTerm] = useState('');
+  const [moveSearchTerm, setMoveSearchTerm] = useState('');
 
   const mainScrollRef = useRef<HTMLDivElement>(null);
 
@@ -319,12 +322,24 @@ export default function RegionPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
+          <div className="relative group/search hidden md:block max-w-[200px] lg:max-w-[300px] w-full mr-2">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/20 group-focus-within/search:text-blue-400 transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <input 
+              type="text"
+              value={pokemonSearchTerm}
+              onChange={(e) => setPokemonSearchTerm(e.target.value)}
+              placeholder={t('Search by name...')}
+              className="w-full bg-black/40 border-2 border-white/10 rounded-xl pl-9 pr-4 py-2 font-sans text-sm text-white placeholder:text-white/30 focus:border-blue-500/50 outline-none transition-all"
+            />
+          </div>
           <div className="hidden lg:flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border-2 border-white/10">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span className="text-[9px] font-mono text-white/60 font-black uppercase tracking-widest">Network Secure</span>
           </div>
-          <button onClick={() => { setSelectedPlayer(null); setSelectedOpponent(null); setPlayerPokemon(null); setOpponentPokemon(null); }} className="px-2 sm:px-4 py-1 sm:py-1.5 bg-white/5 hover:bg-white/10 border-2 sm:border-4 border-black text-white/60 hover:text-white font-mono font-black text-[8px] sm:text-[10px] uppercase transition-all rounded-lg sm:rounded-xl">Reset</button>
+          <button onClick={() => { setSelectedPlayer(null); setSelectedOpponent(null); setPlayerPokemon(null); setOpponentPokemon(null); setPokemonSearchTerm(''); }} className="px-2 sm:px-4 py-1.5 bg-white/5 hover:bg-white/10 border-2 sm:border-4 border-black text-white/60 hover:text-white font-mono font-black text-[8px] sm:text-[10px] uppercase transition-all rounded-lg sm:rounded-xl">Reset</button>
         </div>
       </header>
 
@@ -363,7 +378,10 @@ export default function RegionPage() {
                   ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-7' 
                   : 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10'
             }`}>
-              {entries.map((entry, idx) => {
+              {entries.filter(entry => {
+                const name = localizedNames[entry.pokemon_species.name] || entry.pokemon_species.name;
+                return name.toLowerCase().includes(pokemonSearchTerm.toLowerCase());
+              }).map((entry, idx) => {
                 const id = entry.pokemon_species.url.split('/').filter(Boolean).pop();
                 const isP1 = selectedPlayer?.name === entry.pokemon_species.name;
                 const isP2 = selectedOpponent?.name === entry.pokemon_species.name;
@@ -394,7 +412,7 @@ export default function RegionPage() {
                         </div>
                       )}
                       <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`} className={`w-16 h-16 sm:w-24 sm:h-24 transition-transform duration-500 ${isP1 || isP2 ? 'scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 'group-hover:scale-125'}`} style={{ imageRendering: 'pixelated' }} />
-                      <h3 className={`mt-1 sm:mt-2 font-mono font-black text-[10px] sm:text-sm uppercase truncate w-full text-center tracking-tight transition-colors ${isP1 || isP2 ? 'text-white' : 'text-white/40 group-hover:text-white'}`}>{displayName}</h3>
+                      <h3 className={`mt-1 sm:mt-2 font-sans font-bold text-sm sm:text-base uppercase truncate w-full text-center tracking-normal transition-colors ${isP1 || isP2 ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>{displayName}</h3>
                     </div>
                   </div>
 
@@ -494,10 +512,24 @@ export default function RegionPage() {
                   <span className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] mb-0.5">Configuration.Protocol</span>
                   <h2 className="text-xl sm:text-4xl font-mono uppercase font-black text-white tracking-tighter leading-none">{t('Define Protocol')}</h2>
                 </div>
-                <div className="flex gap-2 sm:gap-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className={`w-3 h-3 sm:w-5 sm:h-5 rounded-md border-2 border-black shadow-[2px_2px_0_0_#000] ${i < tempSelectedMoves.length ? 'bg-blue-500' : 'bg-white/5'}`}></div>
-                  ))}
+                <div className="flex flex-col flex-1 items-end sm:items-center">
+                  <div className="relative group/search max-w-[180px] sm:max-w-[240px] w-full mb-3">
+                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/20 group-focus-within/search:text-blue-400 transition-colors">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                     </div>
+                     <input 
+                       type="text"
+                       value={moveSearchTerm}
+                       onChange={(e) => setMoveSearchTerm(e.target.value)}
+                       placeholder={t('Search by technique...')}
+                       className="w-full bg-black/60 border-2 border-white/5 rounded-xl pl-10 pr-4 py-2 font-sans text-sm text-white placeholder:text-white/30 focus:border-blue-500/50 outline-none transition-all"
+                     />
+                  </div>
+                  <div className="flex gap-2 sm:gap-3">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className={`w-3 h-3 sm:w-5 sm:h-5 rounded-md border-2 border-black shadow-[2px_2px_0_0_#000] ${i < tempSelectedMoves.length ? 'bg-blue-500' : 'bg-white/5'}`}></div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -534,7 +566,10 @@ export default function RegionPage() {
                       <span className="font-mono text-white/30 text-xs uppercase tracking-widest">Scanning Moves...</span>
                     </div>
                   ) : (
-                    availableMovesDetails.map((m: any) => {
+                    availableMovesDetails.filter(m => {
+                      const name = getLocalizedMoveName(m);
+                      return name.toLowerCase().includes(moveSearchTerm.toLowerCase());
+                    }).map((m: any) => {
                       const isSelected = tempSelectedMoves.find(sm => sm.name === m.name);
                       const typeTheme = typeThemes[m.type.name] || { color: '#555', shadow: 'rgba(0,0,0,0.5)' };
                       return (

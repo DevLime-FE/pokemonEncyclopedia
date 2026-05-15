@@ -79,7 +79,19 @@ const resources = {
       "Link Optimized": "연결 최적화 완료",
       "Protocol Integrity: 99.8%": "연결 품질: 매우 좋음",
       "System Status: Stable": "시스템 상태: 안정",
-      "Re-initialize Calibration": "다시 측정하기"
+      "Re-initialize Calibration": "다시 측정하기",
+      "Encyclopedia Search": "도감 데이터 검색",
+      "Search by name (Pokemon or Move)...": "이름을 입력하세요 (포켓몬 또는 기술)...",
+      "No results found.": "결과를 찾을 수 없습니다.",
+      "Search failed.": "검색에 실패했습니다.",
+      "SEARCHING...": "검색 중...",
+      "SEARCH": "검색",
+      "Enter query to begin data retrieval": "검색어를 입력하여 데이터를 조회하세요.",
+      "Move Capability": "보유 기술 데이터",
+      "Effect Description": "기술 효과 설명",
+      "No description available.": "설명이 존재하지 않습니다.",
+      "Search by name...": "이름으로 검색...",
+      "Search by technique...": "기술 이름으로 검색..."
     }
   },
   en: {
@@ -158,7 +170,19 @@ const resources = {
       "Link Optimized": "Link Optimized",
       "Protocol Integrity: 99.8%": "Connection Quality: Great",
       "System Status: Stable": "System: Stable",
-      "Re-initialize Calibration": "Re-test"
+      "Re-initialize Calibration": "Re-test",
+      "Encyclopedia Search": "Encyclopedia Search",
+      "Search by name (Pokemon or Move)...": "Search by name (Pokemon or Move)...",
+      "No results found.": "No results found.",
+      "Search failed.": "Search failed.",
+      "SEARCHING...": "SEARCHING...",
+      "SEARCH": "SEARCH",
+      "Enter query to begin data retrieval": "Enter query to begin data retrieval",
+      "Move Capability": "Move Capability",
+      "Effect Description": "Effect Description",
+      "No description available.": "No description available.",
+      "Search by name...": "Search by name...",
+      "Search by technique...": "Search by technique..."
     }
   },
   ja: {
@@ -237,7 +261,19 @@ const resources = {
       "Link Optimized": "接続最適化完了",
       "Protocol Integrity: 99.8%": "接続品質: 非常に良い",
       "System Status: Stable": "システム状態: 安定",
-      "Re-initialize Calibration": "もう一度測定"
+      "Re-initialize Calibration": "もう一度測定",
+      "Encyclopedia Search": "図鑑データ検索",
+      "Search by name (Pokemon or Move)...": "名前を入力してください (ポケモン または 技)...",
+      "No results found.": "結果が見つかりません。",
+      "Search failed.": "検索に失敗しました。",
+      "SEARCHING...": "検索中...",
+      "SEARCH": "検索",
+      "Enter query to begin data retrieval": "検索語を入力してデータを照会してください。",
+      "Move Capability": "保有技データ",
+      "Effect Description": "技の効果説明",
+      "No description available.": "説明が存在しません。",
+      "Search by name...": "名前で検索...",
+      "Search by technique...": "技の名前で検索..."
     }
   }
 };
