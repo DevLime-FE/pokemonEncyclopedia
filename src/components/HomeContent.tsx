@@ -194,18 +194,27 @@ export default function HomeContent() {
       </main>
 
       {/* 시스템 푸터 */}
-      <footer className="z-50 bg-[#1a1a1a] border-t-[8px] border-black px-6 sm:px-12 py-3 sm:py-4 flex justify-between items-center shrink-0">
-        <div className="flex gap-6 sm:gap-10">
+      <footer className="z-50 bg-[#1a1a1a] border-t-[8px] border-black px-6 sm:px-12 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center shrink-0 gap-4 sm:gap-0 relative">
+        <div className="flex gap-6 sm:gap-10 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex flex-col">
             <span className="text-[7px] sm:text-[8px] font-black text-white/30 uppercase tracking-widest mb-0.5">Core Status</span>
             <span className="text-[10px] sm:text-xs font-mono text-green-500 font-black uppercase">Synchronized</span>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col text-right sm:text-left">
             <span className="text-[7px] sm:text-[8px] font-black text-white/30 uppercase tracking-widest mb-0.5">Build</span>
             <span className="text-[10px] sm:text-xs font-mono text-white/40 font-black uppercase">v2.0.4</span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+
+        {/* 저작권 표시 */}
+        <div className="flex flex-col items-center sm:absolute sm:left-1/2 sm:-translate-x-1/2 order-3 sm:order-none mt-2 sm:mt-0">
+          <span className="text-[10px] sm:text-xs font-mono font-black text-white/50 uppercase tracking-[0.2em]">
+            © 2026 CREATED BY <span className="text-blue-400">DongEsssss(Lime)</span>
+          </span>
+          <span className="text-[7px] font-mono text-white/20 uppercase tracking-[0.3em] mt-1">All Rights Reserved</span>
+        </div>
+
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end order-2 sm:order-none">
           <p className="hidden sm:block text-[10px] font-mono text-white/20 uppercase tracking-[0.3em]">Neural-Link Established</p>
           <div className="flex gap-1.5">
             <div className="w-2 h-2 rounded-full bg-blue-500/40"></div>
