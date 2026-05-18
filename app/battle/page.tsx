@@ -16,7 +16,7 @@ export default function BattlePage() {
   const router = useRouter();
   const { playerPokemon, opponentPokemon, setPlayerPokemon, setOpponentPokemon, playerMoves: contextPlayerMoves, opponentMoves: contextOpponentMoves, resetBattle } = useBattle();
 
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<{text: string, type: 'p1'|'p2'|'sys'}[]>([]);
   const [battleOver, setBattleOver] = useState(false);
   const [playerHp, setPlayerHp] = useState<number>(0);
   const [oppHp, setOppHp] = useState<number>(0);
@@ -47,6 +47,7 @@ export default function BattlePage() {
   const [oppStatStages, setOppStatStages] = useState<StatStages>(defaultStages);
 
   const [fainting, setFainting] = useState<'p1' | 'p2' | null>(null);
+  const [evolutionAnim, setEvolutionAnim] = useState<'p1' | 'p2' | null>(null);
   const [winner, setWinner] = useState<{ player: string; pokemon: string } | null>(null);
   
   const hasInitialized = useRef(false);
@@ -91,9 +92,9 @@ export default function BattlePage() {
         setOpponentMoves(oMoves);
 
         setLogs([
-          t('Battle Start!'),
-          t('Go, {{name}}!', { name: getLocalizedName(pSpecies, playerPokemon.name) }),
-          t('Go, {{name}}!', { name: getLocalizedName(oSpecies, opponentPokemon.name) })
+          {text: t('Battle Start!'), type: 'sys'},
+          {text: t('Go, {{name}}!', { name: getLocalizedName(pSpecies, playerPokemon.name) }), type: 'p1'},
+          {text: t('Go, {{name}}!', { name: getLocalizedName(oSpecies, opponentPokemon.name) }), type: 'p2'}
         ]);
       } catch (err) { console.error(err); }
       setLoading(false);
@@ -166,7 +167,7 @@ export default function BattlePage() {
       await wait(1500);
       const winName = getLocalizedName(faintedPlayer === 'p1' ? opponentSpecies : playerSpecies, faintedPlayer === 'p1' ? opponentPokemon!.name : playerPokemon!.name);
       setWinner({ player: winnerLabel, pokemon: winName });
-      setLogs(prev => [...prev, t('{{name}} fainted! {{winner}} wins!', { name: getLocalizedName(species, faintedPokemon.name), winner: winnerLabel })]);
+      setLogs(prev => [...prev, { text: t('{{name}} fainted! {{winner}} wins!', { name: getLocalizedName(species, faintedPokemon.name), winner: winnerLabel }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
       setBattleOver(true);
       setIsProcessing(false);
       setDamageEffect(null);
@@ -179,7 +180,7 @@ export default function BattlePage() {
     // 1. Flinch (풀죽음)
     if (attackerVolatile.flinch) {
       setAttackerVolatile(prev => ({ ...prev, flinch: false }));
-      setLogs(prev => [...prev, t('{{name}} flinched and couldn\'t move!', { name: attackerName })]);
+      setLogs(prev => [...prev, { text: t('{{name}} flinched and couldn\'t move!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
       await wait(1500);
       return endTurn();
     }
@@ -188,10 +189,10 @@ export default function BattlePage() {
     if (attackerStatus === 'FRZ') {
       if (Math.random() <= 0.2) {
         setAttackerStatus(null);
-        setLogs(prev => [...prev, t('{{name}} thawed out!', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} thawed out!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1000);
       } else {
-        setLogs(prev => [...prev, t('{{name}} is frozen solid!', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} is frozen solid!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1500);
         return endTurn();
       }
@@ -201,11 +202,11 @@ export default function BattlePage() {
     if (attackerStatus === 'SLP') {
       if (attackerVolatile.sleepTurns <= 0) {
         setAttackerStatus(null);
-        setLogs(prev => [...prev, t('{{name}} woke up!', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} woke up!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1000);
       } else {
         setAttackerVolatile(prev => ({ ...prev, sleepTurns: prev.sleepTurns - 1 }));
-        setLogs(prev => [...prev, t('{{name}} is fast asleep.', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} is fast asleep.', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1500);
         return endTurn();
       }
@@ -214,7 +215,7 @@ export default function BattlePage() {
     // 4. Paralysis (마비)
     if (attackerStatus === 'PAR') {
       if (Math.random() <= 0.25) {
-        setLogs(prev => [...prev, t('{{name}} is paralyzed! It can\'t move!', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} is paralyzed! It can\'t move!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1500);
         return endTurn();
       }
@@ -224,15 +225,15 @@ export default function BattlePage() {
     let skipMove = false;
     if (attackerVolatile.confusionTurns > 0) {
       setAttackerVolatile(prev => ({ ...prev, confusionTurns: prev.confusionTurns - 1 }));
-      setLogs(prev => [...prev, t('{{name}} is confused!', { name: attackerName })]);
+      setLogs(prev => [...prev, { text: t('{{name}} is confused!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
       await wait(1000);
       
       if (attackerVolatile.confusionTurns - 1 <= 0) {
-        setLogs(prev => [...prev, t('{{name}} snapped out of confusion!', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} snapped out of confusion!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1000);
       } else {
         if (Math.random() <= 0.33) {
-          setLogs(prev => [...prev, t('It hurt itself in its confusion!', { name: attackerName })]);
+          setLogs(prev => [...prev, { text: t('It hurt itself in its confusion!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
           setAttackAnim(isPlayer1 ? 'p1' : 'p2');
           await wait(200);
           setHitFlash(isPlayer1 ? 'p1' : 'p2');
@@ -262,7 +263,7 @@ export default function BattlePage() {
     // 6. Infatuation (헤롱헤롱)
     if (attackerVolatile.infatuation) {
       if (Math.random() <= 0.5) {
-        setLogs(prev => [...prev, t('{{name}} is immobilized by love!', { name: attackerName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} is immobilized by love!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1500);
         return endTurn();
       }
@@ -276,16 +277,18 @@ export default function BattlePage() {
     if (attacker.name === 'magikarp' && move.name === 'splash') {
       setAttackAnim(isPlayer1 ? 'p1' : 'p2');
       await wait(200);
-      setLogs(prev => [...prev, t('{{name}} used {{move}}!', { name: attackerName, move: moveName })]);
+      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
       await wait(600);
       setAttackAnim(null);
 
       const isEvolving = Math.random() <= 0.10;
       if (isEvolving) {
-        setLogs(prev => [...prev, t('What? {{name}} is evolving!', { name: attackerName })]);
-        await wait(1500);
-        setFlashColor('#ffffff');
+        setLogs(prev => [...prev, { text: t('What? {{name}} is evolving!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(500);
+        setEvolutionAnim(isPlayer1 ? 'p1' : 'p2');
+        await wait(500);
+        setFlashColor('rainbow');
+        await wait(2000);
         try {
           const gyaradosRes = await fetch('https://pokeapi.co/api/v2/pokemon/gyarados');
           const newGyarados = await gyaradosRes.json();
@@ -309,12 +312,13 @@ export default function BattlePage() {
              setOpponentPokemon(newGyarados); setOpponentSpecies(newGyaradosSpecies); setOpponentMoves(newMoves);
              setOppHp((newGyarados.stats.find((s: any) => s.stat.name === 'hp')?.base_stat || 95) * 3);
           }
+          setEvolutionAnim(null);
           setFlashColor(null);
-          setLogs(prev => [...prev, t('Congratulations! {{name}} evolved into {{evolvedName}}!', { name: attackerName, evolvedName })]);
+          setLogs(prev => [...prev, { text: t('Congratulations! {{name}} evolved into {{evolvedName}}!', { name: attackerName, evolvedName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
           await wait(1500);
         } catch (error) { setFlashColor(null); }
       } else {
-        setLogs(prev => [...prev, t("But nothing happened...")]);
+        setLogs(prev => [...prev, { text: t("But nothing happened..."), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1000);
       }
       return endTurn();
@@ -324,7 +328,7 @@ export default function BattlePage() {
       setAttackAnim(isPlayer1 ? 'p1' : 'p2');
       setFlashColor(typeThemes[move.type.name]?.neon || '#fff');
       await wait(400);
-      setLogs(prev => [...prev, t('{{name}} used {{move}}!', { name: attackerName, move: moveName })]);
+      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
       await wait(600);
       setFlashColor(null); setAttackAnim(null);
       
@@ -334,7 +338,7 @@ export default function BattlePage() {
         speed: Math.min(6, prev.speed + 1)
       }));
 
-      setLogs(prev => [...prev, t("{{name}}'s Attack and Speed rose!", { name: attackerName })]);
+      setLogs(prev => [...prev, { text: t("{{name}}'s Attack and Speed rose!", { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
       await wait(1000);
       return endTurn();
     }
@@ -346,7 +350,7 @@ export default function BattlePage() {
     setFlashColor(typeThemes[move.type.name]?.neon || '#fff');
     await wait(200);
 
-    setLogs(prev => [...prev, t('{{name}} used {{move}}!', { name: attackerName, move: moveName })]);
+    setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
     await wait(400);
 
     // Damage application
@@ -361,7 +365,7 @@ export default function BattlePage() {
       if (multiplier > 0) {
         if (defenderStatus === 'FRZ' && move.type.name === 'fire') {
           setDefenderStatus(null);
-          setLogs(prev => [...prev, t('{{name}} thawed out!', { name: defenderName })]);
+          setLogs(prev => [...prev, { text: t('{{name}} thawed out!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         }
 
         let numHits = 1;
@@ -378,8 +382,8 @@ export default function BattlePage() {
           else if (numHits === 4) damagePerHit = Math.max(1, Math.round(base100Damage * 0.25));
         }
 
-        if (multiplier > 1) setLogs(prev => [...prev, t("It's super effective!")]);
-        else if (multiplier < 1) setLogs(prev => [...prev, t("It's not very effective...")]);
+        if (multiplier > 1) setLogs(prev => [...prev, { text: t("It's super effective!"), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        else if (multiplier < 1) setLogs(prev => [...prev, { text: t("It's not very effective..."), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         if (multiplier !== 1) await wait(600);
 
         let currentDefenderHp = isPlayer1 ? oppHp : playerHp;
@@ -412,10 +416,10 @@ export default function BattlePage() {
         }
 
         let finalDamage = Math.round(totalDamage);
-        setLogs(prev => [...prev, t('Dealt {{damage}} damage!', { damage: finalDamage })]);
+        setLogs(prev => [...prev, { text: t('Dealt {{damage}} damage!', { damage: finalDamage }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         if (numHits > 1) {
           await wait(600);
-          setLogs(prev => [...prev, t('Hit {{count}} times!', { count: numHits })]);
+          setLogs(prev => [...prev, { text: t('Hit {{count}} times!', { count: numHits }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         }
 
         await wait(600);
@@ -429,7 +433,7 @@ export default function BattlePage() {
           if (!defenderStatus && applyCheck) {
             setDefenderStatus(status);
             if (status === 'TOX') setDefenderVolatile(prev => ({ ...prev, toxTurns: 1 }));
-            setLogs(prev => [...prev, t(msg, { name: defenderName })]);
+            setLogs(prev => [...prev, { text: t(msg, { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
             await wait(1000);
           }
         };
@@ -456,7 +460,7 @@ export default function BattlePage() {
           setDefenderVolatile(prev => ({ ...prev, flinch: true }));
         }
       } else {
-        setLogs(prev => [...prev, t("It had no effect!")]);
+        setLogs(prev => [...prev, { text: t("It had no effect!"), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1000);
       }
     } else {
@@ -467,11 +471,11 @@ export default function BattlePage() {
           setDefenderStatus(status);
           if (status === 'SLP') setDefenderVolatile(prev => ({ ...prev, sleepTurns: Math.floor(Math.random() * 3) + 1 }));
           if (status === 'TOX') setDefenderVolatile(prev => ({ ...prev, toxTurns: 1 }));
-          setLogs(prev => [...prev, t(msg, { name: defenderName })]);
+          setLogs(prev => [...prev, { text: t(msg, { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         } else if (!applyCheck) {
-          setLogs(prev => [...prev, t('It doesn\'t affect {{name}}...', { name: defenderName })]);
+          setLogs(prev => [...prev, { text: t('It doesn\'t affect {{name}}...', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         } else {
-          setLogs(prev => [...prev, t('{{name}} is already affected by a status condition!', { name: defenderName })]);
+          setLogs(prev => [...prev, { text: t('{{name}} is already affected by a status condition!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         }
         await wait(1500);
       };
@@ -489,17 +493,17 @@ export default function BattlePage() {
       } else if (['confuse-ray', 'swagger', 'sweet-kiss'].includes(move.name)) {
         if (defenderVolatile.confusionTurns === 0) {
           setDefenderVolatile(prev => ({ ...prev, confusionTurns: Math.floor(Math.random() * 4) + 1 }));
-          setLogs(prev => [...prev, t('{{name}} became confused!', { name: defenderName })]);
+          setLogs(prev => [...prev, { text: t('{{name}} became confused!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         } else {
-           setLogs(prev => [...prev, t('{{name}} is already confused!', { name: defenderName })]);
+           setLogs(prev => [...prev, { text: t('{{name}} is already confused!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         }
         await wait(1500);
       } else if (['captivate', 'attract'].includes(move.name)) {
         if (!defenderVolatile.infatuation) {
           setDefenderVolatile(prev => ({ ...prev, infatuation: true }));
-          setLogs(prev => [...prev, t('{{name}} fell in love!', { name: defenderName })]);
+          setLogs(prev => [...prev, { text: t('{{name}} fell in love!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         } else {
-           setLogs(prev => [...prev, t('{{name}} is already in love!', { name: defenderName })]);
+           setLogs(prev => [...prev, { text: t('{{name}} is already in love!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         }
         await wait(1500);
       } else if (['curse'].includes(move.name) && attacker.types.some(t => t.type.name === 'ghost')) {
@@ -507,13 +511,13 @@ export default function BattlePage() {
         const selfDmg = Math.floor(maxAttackerHp / 2);
         if (isPlayer1) { setPlayerHp(Math.max(0, playerHp - selfDmg)); } else { setOppHp(Math.max(0, oppHp - selfDmg)); }
         setDefenderVolatile(prev => ({ ...prev, curse: true }));
-        setLogs(prev => [...prev, t('{{name}} cut its own HP and laid a curse on {{target}}!', { name: attackerName, target: defenderName })]);
+        setLogs(prev => [...prev, { text: t('{{name}} cut its own HP and laid a curse on {{target}}!', { name: attackerName, target: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1500);
         if ((isPlayer1 ? playerHp - selfDmg : oppHp - selfDmg) <= 0) {
            return handleFaint(isPlayer1 ? 'p1' : 'p2', attacker, attackerSpecies, isPlayer1 ? 'PLAYER 2' : 'PLAYER 1');
         }
       } else {
-        setLogs(prev => [...prev, t("But it failed!")]);
+        setLogs(prev => [...prev, { text: t("But it failed!"), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
         await wait(1000);
       }
     }
@@ -535,13 +539,13 @@ export default function BattlePage() {
        if (isP1) {
          const nextHp = Math.max(0, playerHp - dmg);
          setPlayerHp(nextHp);
-         setLogs(prev => [...prev, t(msg, { name: getLocalizedName(pSpec, pMon!.name) })]);
+         setLogs(prev => [...prev, { text: t(msg, { name: getLocalizedName(pSpec, pMon!.name) }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
          await wait(1000);
          if (nextHp <= 0) { await handleFaint('p1', pMon, pSpec, 'PLAYER 2'); return true; }
        } else {
          const nextHp = Math.max(0, oppHp - dmg);
          setOppHp(nextHp);
-         setLogs(prev => [...prev, t(msg, { name: getLocalizedName(pSpec, pMon!.name) })]);
+         setLogs(prev => [...prev, { text: t(msg, { name: getLocalizedName(pSpec, pMon!.name) }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
          await wait(1000);
          if (nextHp <= 0) { await handleFaint('p2', pMon, pSpec, 'PLAYER 1'); return true; }
        }
@@ -615,8 +619,8 @@ export default function BattlePage() {
           </div>
 
           {flashColor && (
-            <div className="absolute inset-0 z-50 pointer-events-none animate-in fade-in out-fade-out duration-300" style={{ backgroundColor: `${flashColor}22` }}>
-              <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 100px ${flashColor}55` }}></div>
+            <div className={`absolute inset-0 z-50 pointer-events-none animate-in fade-in out-fade-out duration-300 ${flashColor === 'rainbow' ? 'animate-rainbow-bg' : ''}`} style={flashColor !== 'rainbow' ? { backgroundColor: `${flashColor}22` } : {}}>
+              <div className="absolute inset-0" style={{ boxShadow: flashColor === 'rainbow' ? 'inset 0 0 150px rgba(255,255,255,0.8)' : `inset 0 0 100px ${flashColor}55` }}></div>
             </div>
           )}
 
@@ -678,7 +682,8 @@ export default function BattlePage() {
                 className={`w-24 h-24 sm:w-48 sm:h-48 relative z-10 transition-all duration-500 
                     ${currentTurn === 'player2' ? 'scale-110' : 'scale-100 opacity-60 grayscale-[30%]'} 
                     ${hitFlash === 'p2' ? 'brightness-[10] contrast-[2] transition-none' : ''}
-                    ${fainting === 'p2' ? 'animate-faint pointer-events-none' : ''}`}
+                    ${fainting === 'p2' ? 'animate-faint pointer-events-none' : ''}
+                    ${evolutionAnim === 'p2' ? 'animate-evolution-squish-p2 pointer-events-none transition-none' : ''}`}
                 style={{ imageRendering: 'pixelated' }}
               />
 
@@ -716,7 +721,8 @@ export default function BattlePage() {
                 className={`w-28 h-28 sm:w-52 sm:h-52 relative z-10 transition-all duration-500 scale-x-[-1] 
                     ${currentTurn === 'player1' ? 'scale-x-[-1.1] scale-y-[1.1]' : 'scale-x-[-1] opacity-60 grayscale-[30%]'} 
                     ${hitFlash === 'p1' ? 'brightness-[10] contrast-[2] transition-none' : ''}
-                    ${fainting === 'p1' ? 'animate-faint pointer-events-none' : ''}`}
+                    ${fainting === 'p1' ? 'animate-faint pointer-events-none' : ''}
+                    ${evolutionAnim === 'p1' ? 'animate-evolution-squish-p1 pointer-events-none transition-none' : ''}`}
                 style={{ imageRendering: 'pixelated' }}
               />
 
@@ -892,10 +898,10 @@ export default function BattlePage() {
               }`}
           >
             <div className="absolute top-1.5 right-3 text-[6px] sm:text-[8px] font-black text-white/10 uppercase tracking-widest">Live</div>
-            {logs.map((log, i) => (
-              <div key={i} className="flex gap-1.5 sm:gap-3 mb-1.5 sm:mb-2.5 items-start animate-in fade-in slide-in-from-bottom-1 sm:slide-in-from-bottom-2 duration-300">
-                <span className="text-blue-400 font-mono text-[10px] sm:text-sm opacity-50">»</span>
-                <p className="font-mono text-blue-400 text-[8px] sm:text-[13px] uppercase tracking-tighter leading-tight font-black drop-shadow-[0_0_5px_rgba(59,130,246,0.3)]">{log}</p>
+            {logs.map((logObj, i) => (
+              <div key={i} className={`flex gap-1.5 sm:gap-3 mb-1.5 sm:mb-2.5 items-start animate-in fade-in slide-in-from-bottom-1 sm:slide-in-from-bottom-2 duration-300 ${logObj.type === 'p1' ? 'text-blue-400' : logObj.type === 'p2' ? 'text-red-400' : 'text-gray-400'}`}>
+                <span className={`font-mono text-[10px] sm:text-sm opacity-50 ${logObj.type === 'p1' ? 'text-blue-400' : logObj.type === 'p2' ? 'text-red-400' : 'text-gray-400'}`}>»</span>
+                <p className={`font-mono text-[8px] sm:text-[13px] uppercase tracking-tighter leading-tight font-black drop-shadow-[0_0_5px_rgba(255,255,255,0.1)] ${logObj.type === 'p1' ? 'text-blue-400' : logObj.type === 'p2' ? 'text-red-400' : 'text-gray-400'}`}>{logObj.text}</p>
               </div>
             ))}
           </div>
@@ -986,6 +992,36 @@ export default function BattlePage() {
           100% { transform: translateY(150px) scale(0); filter: brightness(20); opacity: 0; }
         }
         .animate-faint { animation: faint 1.2s cubic-bezier(0.4, 0, 1, 1) forwards; }
+        @keyframes rainbow-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-rainbow-bg {
+          background: linear-gradient(124deg, #ff240055, #e81d1d55, #e8b71d55, #e3e81d55, #1de84055, #1ddde855, #2b1de855, #dd00f355, #dd00f355);
+          background-size: 400% 400%;
+          animation: rainbow-shift 2s ease infinite;
+        }
+        @keyframes evolution-squish-p1 {
+          0% { transform: scale(-1, 1); filter: brightness(1) contrast(1); }
+          10% { transform: scale(-1.2, 0.8); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          30% { transform: scale(-0.8, 1.2); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          50% { transform: scale(-1.1, 0.9); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          70% { transform: scale(-0.9, 1.1); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          90% { transform: scale(-1.05, 0.95); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          100% { transform: scale(-1, 1); filter: brightness(10) contrast(0) drop-shadow(0 0 40px white); }
+        }
+        @keyframes evolution-squish-p2 {
+          0% { transform: scale(1, 1); filter: brightness(1) contrast(1); }
+          10% { transform: scale(1.2, 0.8); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          30% { transform: scale(0.8, 1.2); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          50% { transform: scale(1.1, 0.9); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          70% { transform: scale(0.9, 1.1); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          90% { transform: scale(1.05, 0.95); filter: brightness(10) contrast(0) drop-shadow(0 0 20px white); }
+          100% { transform: scale(1, 1); filter: brightness(10) contrast(0) drop-shadow(0 0 40px white); }
+        }
+        .animate-evolution-squish-p1 { animation: evolution-squish-p1 2.5s ease-in-out forwards; }
+        .animate-evolution-squish-p2 { animation: evolution-squish-p2 2.5s ease-in-out forwards; }
         .custom-scrollbar::-webkit-scrollbar { width: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
