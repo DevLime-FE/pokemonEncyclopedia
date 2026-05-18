@@ -122,7 +122,10 @@ const resources = {
       "{{name}} is afflicted by the curse!": "{{name}}은(는) 저주받고 있다!",
       "{{name}}'s Attack and Speed rose!": "{{name}}의 공격과 스피드가 올라갔다!",
       "But nothing happened...": "그러나 아무 일도 일어나지 않았다...",
-      "Hit {{count}} times!": "{{count}}번 맞았다!"
+      "Hit {{count}} times!": "{{count}}번 맞았다!",
+      "What? {{name}} is evolving!": "어라!? {{name}}의 상태가...!",
+      "Congratulations! {{name}} evolved into {{evolvedName}}!": "축하합니다! {{name}}은(는) {{evolvedName}}(으)로 진화했습니다!",
+      "{{name}} transformed into {{target}}!": "{{name}}은(는) {{target}}(으)로 변신했다!"
     }
   },
   en: {
