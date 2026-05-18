@@ -156,6 +156,7 @@ export default function BattlePage() {
     const attackerStatus = isPlayer1 ? playerStatus : oppStatus;
     const defenderStatus = isPlayer1 ? oppStatus : playerStatus;
     const attackerVolatile = isPlayer1 ? playerVolatile : oppVolatile;
+    const defenderVolatile = isPlayer1 ? oppVolatile : playerVolatile;
     const setAttackerVolatile = isPlayer1 ? setPlayerVolatile : setOppVolatile;
     const setDefenderVolatile = isPlayer1 ? setOppVolatile : setPlayerVolatile;
     const setAttackerStatus = isPlayer1 ? setPlayerStatus : setOppStatus;
@@ -174,7 +175,7 @@ export default function BattlePage() {
       await wait(1500);
       const winName = getLocalizedName(faintedPlayer === 'p1' ? opponentSpecies : playerSpecies, faintedPlayer === 'p1' ? opponentPokemon!.name : playerPokemon!.name);
       setWinner({ player: winnerLabel, pokemon: winName });
-      setLogs(prev => [...prev, { text: t('{{name}} fainted! {{winner}} wins!', { name: getLocalizedName(species, faintedPokemon.name), winner: winnerLabel }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} fainted! {{winner}} wins!', { name: getLocalizedName(species, faintedPokemon.name), winner: winnerLabel }), type: isPlayer1 ? 'p1' : 'p2' }]);
       setBattleOver(true);
       setIsProcessing(false);
       setDamageEffect(null);
@@ -187,7 +188,7 @@ export default function BattlePage() {
     // 1. Flinch (풀죽음)
     if (attackerVolatile.flinch) {
       setAttackerVolatile(prev => ({ ...prev, flinch: false }));
-      setLogs(prev => [...prev, { text: t('{{name}} flinched and couldn\'t move!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} flinched and couldn\'t move!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(1500);
       return endTurn();
     }
@@ -196,10 +197,10 @@ export default function BattlePage() {
     if (attackerStatus === 'FRZ') {
       if (Math.random() <= 0.2) {
         setAttackerStatus(null);
-        setLogs(prev => [...prev, { text: t('{{name}} thawed out!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} thawed out!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
       } else {
-        setLogs(prev => [...prev, { text: t('{{name}} is frozen solid!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} is frozen solid!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1500);
         return endTurn();
       }
@@ -209,11 +210,11 @@ export default function BattlePage() {
     if (attackerStatus === 'SLP') {
       if (attackerVolatile.sleepTurns <= 0) {
         setAttackerStatus(null);
-        setLogs(prev => [...prev, { text: t('{{name}} woke up!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} woke up!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
       } else {
         setAttackerVolatile(prev => ({ ...prev, sleepTurns: prev.sleepTurns - 1 }));
-        setLogs(prev => [...prev, { text: t('{{name}} is fast asleep.', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} is fast asleep.', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1500);
         return endTurn();
       }
@@ -222,7 +223,7 @@ export default function BattlePage() {
     // 4. Paralysis (마비)
     if (attackerStatus === 'PAR') {
       if (Math.random() <= 0.25) {
-        setLogs(prev => [...prev, { text: t('{{name}} is paralyzed! It can\'t move!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} is paralyzed! It can\'t move!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1500);
         return endTurn();
       }
@@ -232,15 +233,15 @@ export default function BattlePage() {
     let skipMove = false;
     if (attackerVolatile.confusionTurns > 0) {
       setAttackerVolatile(prev => ({ ...prev, confusionTurns: prev.confusionTurns - 1 }));
-      setLogs(prev => [...prev, { text: t('{{name}} is confused!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} is confused!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(1000);
 
       if (attackerVolatile.confusionTurns - 1 <= 0) {
-        setLogs(prev => [...prev, { text: t('{{name}} snapped out of confusion!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} snapped out of confusion!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
       } else {
         if (Math.random() <= 0.33) {
-          setLogs(prev => [...prev, { text: t('It hurt itself in its confusion!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('It hurt itself in its confusion!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
           setAttackAnim(isPlayer1 ? 'p1' : 'p2');
           await wait(200);
           setHitFlash(isPlayer1 ? 'p1' : 'p2');
@@ -270,7 +271,7 @@ export default function BattlePage() {
     // 6. Infatuation (헤롱헤롱)
     if (attackerVolatile.infatuation) {
       if (Math.random() <= 0.5) {
-        setLogs(prev => [...prev, { text: t('{{name}} is immobilized by love!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} is immobilized by love!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1500);
         return endTurn();
       }
@@ -284,13 +285,13 @@ export default function BattlePage() {
     if (attacker.name === 'magikarp' && move.name === 'splash') {
       setAttackAnim(isPlayer1 ? 'p1' : 'p2');
       await wait(200);
-      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(600);
       setAttackAnim(null);
 
       const isEvolving = Math.random() <= 0.10;
       if (isEvolving) {
-        setLogs(prev => [...prev, { text: t('What? {{name}} is evolving!', { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('What? {{name}} is evolving!', { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(500);
         setEvolutionAnim(isPlayer1 ? 'p1' : 'p2');
         await wait(500);
@@ -321,11 +322,11 @@ export default function BattlePage() {
           }
           setEvolutionAnim(null);
           setFlashColor(null);
-          setLogs(prev => [...prev, { text: t('Congratulations! {{name}} evolved into {{evolvedName}}!', { name: attackerName, evolvedName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('Congratulations! {{name}} evolved into {{evolvedName}}!', { name: attackerName, evolvedName }), type: isPlayer1 ? 'p1' : 'p2' }]);
           await wait(1500);
         } catch (error) { setFlashColor(null); }
       } else {
-        setLogs(prev => [...prev, { text: t("But nothing happened..."), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t("But nothing happened..."), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
       }
       return endTurn();
@@ -333,7 +334,7 @@ export default function BattlePage() {
     if (move.name === 'transform') {
       setAttackAnim(isPlayer1 ? 'p1' : 'p2');
       await wait(400);
-      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(600);
       setAttackAnim(null);
 
@@ -361,7 +362,7 @@ export default function BattlePage() {
 
       setEvolutionAnim(null);
       setFlashColor(null);
-      setLogs(prev => [...prev, { text: t('{{name}} transformed into {{target}}!', { name: attackerName, target: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} transformed into {{target}}!', { name: attackerName, target: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(1500);
       return endTurn();
     }
@@ -370,7 +371,7 @@ export default function BattlePage() {
       setAttackAnim(isPlayer1 ? 'p1' : 'p2');
       setFlashColor(typeThemes[move.type.name]?.neon || '#fff');
       await wait(400);
-      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(600);
       setFlashColor(null); setAttackAnim(null);
 
@@ -380,7 +381,7 @@ export default function BattlePage() {
         speed: Math.min(6, prev.speed + 1)
       }));
 
-      setLogs(prev => [...prev, { text: t("{{name}}'s Attack and Speed rose!", { name: attackerName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+      setLogs(prev => [...prev, { text: t("{{name}}'s Attack and Speed rose!", { name: attackerName }), type: isPlayer1 ? 'p1' : 'p2' }]);
       await wait(1000);
       return endTurn();
     }
@@ -392,7 +393,7 @@ export default function BattlePage() {
     setFlashColor(typeThemes[move.type.name]?.neon || '#fff');
     await wait(200);
 
-    setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+    setLogs(prev => [...prev, { text: t('{{name}} used {{move}}!', { name: attackerName, move: moveName }), type: isPlayer1 ? 'p1' : 'p2' }]);
     await wait(400);
 
     // Damage application
@@ -407,7 +408,7 @@ export default function BattlePage() {
       if (multiplier > 0) {
         if (defenderStatus === 'FRZ' && move.type.name === 'fire') {
           setDefenderStatus(null);
-          setLogs(prev => [...prev, { text: t('{{name}} thawed out!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('{{name}} thawed out!', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         }
 
         let numHits = 1;
@@ -424,8 +425,8 @@ export default function BattlePage() {
           else if (numHits === 4) damagePerHit = Math.max(1, Math.round(base100Damage * 0.25));
         }
 
-        if (multiplier > 1) setLogs(prev => [...prev, { text: t("It's super effective!"), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
-        else if (multiplier < 1) setLogs(prev => [...prev, { text: t("It's not very effective..."), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        if (multiplier > 1) setLogs(prev => [...prev, { text: t("It's super effective!"), type: isPlayer1 ? 'p1' : 'p2' }]);
+        else if (multiplier < 1) setLogs(prev => [...prev, { text: t("It's not very effective..."), type: isPlayer1 ? 'p1' : 'p2' }]);
         if (multiplier !== 1) await wait(600);
 
         let currentDefenderHp = isPlayer1 ? oppHp : playerHp;
@@ -458,10 +459,10 @@ export default function BattlePage() {
         }
 
         let finalDamage = Math.round(totalDamage);
-        setLogs(prev => [...prev, { text: t('Dealt {{damage}} damage!', { damage: finalDamage }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('Dealt {{damage}} damage!', { damage: finalDamage }), type: isPlayer1 ? 'p1' : 'p2' }]);
         if (numHits > 1) {
           await wait(600);
-          setLogs(prev => [...prev, { text: t('Hit {{count}} times!', { count: numHits }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('Hit {{count}} times!', { count: numHits }), type: isPlayer1 ? 'p1' : 'p2' }]);
         }
 
         await wait(600);
@@ -475,7 +476,7 @@ export default function BattlePage() {
           if (!defenderStatus && applyCheck) {
             setDefenderStatus(status);
             if (status === 'TOX') setDefenderVolatile(prev => ({ ...prev, toxTurns: 1 }));
-            setLogs(prev => [...prev, { text: t(msg, { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+            setLogs(prev => [...prev, { text: t(msg, { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
             await wait(1000);
           }
         };
@@ -502,7 +503,7 @@ export default function BattlePage() {
           setDefenderVolatile(prev => ({ ...prev, flinch: true }));
         }
       } else {
-        setLogs(prev => [...prev, { text: t("It had no effect!"), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t("It had no effect!"), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
       }
     } else {
@@ -513,11 +514,11 @@ export default function BattlePage() {
           setDefenderStatus(status);
           if (status === 'SLP') setDefenderVolatile(prev => ({ ...prev, sleepTurns: Math.floor(Math.random() * 3) + 1 }));
           if (status === 'TOX') setDefenderVolatile(prev => ({ ...prev, toxTurns: 1 }));
-          setLogs(prev => [...prev, { text: t(msg, { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t(msg, { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         } else if (!applyCheck) {
-          setLogs(prev => [...prev, { text: t('It doesn\'t affect {{name}}...', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('It doesn\'t affect {{name}}...', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         } else {
-          setLogs(prev => [...prev, { text: t('{{name}} is already affected by a status condition!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('{{name}} is already affected by a status condition!', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         }
         await wait(1500);
       };
@@ -535,17 +536,17 @@ export default function BattlePage() {
       } else if (['confuse-ray', 'swagger', 'sweet-kiss'].includes(move.name)) {
         if (defenderVolatile.confusionTurns === 0) {
           setDefenderVolatile(prev => ({ ...prev, confusionTurns: Math.floor(Math.random() * 4) + 1 }));
-          setLogs(prev => [...prev, { text: t('{{name}} became confused!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('{{name}} became confused!', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         } else {
-          setLogs(prev => [...prev, { text: t('{{name}} is already confused!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('{{name}} is already confused!', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         }
         await wait(1500);
       } else if (['captivate', 'attract'].includes(move.name)) {
         if (!defenderVolatile.infatuation) {
           setDefenderVolatile(prev => ({ ...prev, infatuation: true }));
-          setLogs(prev => [...prev, { text: t('{{name}} fell in love!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('{{name}} fell in love!', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         } else {
-          setLogs(prev => [...prev, { text: t('{{name}} is already in love!', { name: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+          setLogs(prev => [...prev, { text: t('{{name}} is already in love!', { name: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         }
         await wait(1500);
       } else if (['curse'].includes(move.name) && attacker.types.some(t => t.type.name === 'ghost')) {
@@ -553,13 +554,13 @@ export default function BattlePage() {
         const selfDmg = Math.floor(maxAttackerHp / 2);
         if (isPlayer1) { setPlayerHp(Math.max(0, playerHp - selfDmg)); } else { setOppHp(Math.max(0, oppHp - selfDmg)); }
         setDefenderVolatile(prev => ({ ...prev, curse: true }));
-        setLogs(prev => [...prev, { text: t('{{name}} cut its own HP and laid a curse on {{target}}!', { name: attackerName, target: defenderName }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t('{{name}} cut its own HP and laid a curse on {{target}}!', { name: attackerName, target: defenderName }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1500);
         if ((isPlayer1 ? playerHp - selfDmg : oppHp - selfDmg) <= 0) {
           return handleFaint(isPlayer1 ? 'p1' : 'p2', attacker, attackerSpecies, isPlayer1 ? 'PLAYER 2' : 'PLAYER 1');
         }
       } else {
-        setLogs(prev => [...prev, { text: t("But it failed!"), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t("But it failed!"), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
       }
     }
@@ -581,13 +582,13 @@ export default function BattlePage() {
       if (isP1) {
         const nextHp = Math.max(0, playerHp - dmg);
         setPlayerHp(nextHp);
-        setLogs(prev => [...prev, { text: t(msg, { name: getLocalizedName(pSpec, pMon!.name) }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t(msg, { name: getLocalizedName(pSpec, pMon!.name) }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
         if (nextHp <= 0) { await handleFaint('p1', pMon, pSpec, 'PLAYER 2'); return true; }
       } else {
         const nextHp = Math.max(0, oppHp - dmg);
         setOppHp(nextHp);
-        setLogs(prev => [...prev, { text: t(msg, { name: getLocalizedName(pSpec, pMon!.name) }), type: typeof isPlayer1 !== 'undefined' ? (isPlayer1 ? 'p1' : 'p2') : (typeof isP1 !== 'undefined' ? (isP1 ? 'p1' : 'p2') : 'sys') }]);
+        setLogs(prev => [...prev, { text: t(msg, { name: getLocalizedName(pSpec, pMon!.name) }), type: isPlayer1 ? 'p1' : 'p2' }]);
         await wait(1000);
         if (nextHp <= 0) { await handleFaint('p2', pMon, pSpec, 'PLAYER 1'); return true; }
       }

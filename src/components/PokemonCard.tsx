@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pokemon } from '../services/pokeapi';
+import { Pokemon } from '../types/pokemon';
 
 /**
  * 포켓몬 카드를 표시하는 컴포넌트입니다.
@@ -33,7 +33,7 @@ export default function PokemonCard({ pokemon, isSelected, onSelect }: PokemonCa
       <h3 className="text-center font-mono uppercase text-[10px] sm:text-xs text-black tracking-widest mt-2">{pokemon.name}</h3>
       {/* 포켓몬 타입 목록 */}
       <div className="flex flex-wrap justify-center gap-1 mt-3">
-        {pokemon.types.map((t) => (
+        {pokemon.types.map((t: any) => (
           <span key={t.type.name} className="px-2 py-1 bg-black text-white text-[8px] font-mono uppercase tracking-wider border-2 border-black">
             {t.type.name}
           </span>
