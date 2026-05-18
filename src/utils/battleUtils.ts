@@ -31,10 +31,19 @@ export const calculateDamage = (
   attackerAtk: number,
   defenderDef: number,
   multiplier: number,
-  isStab: boolean = false
+  isStab: boolean = false,
+  attackerStatus: string | null = null,
+  isPhysical: boolean = true
 ) => {
   const stabBonus = isStab ? 1.5 : 1;
-  return Math.max(1, Math.floor(((power * attackerAtk / defenderDef) / 2) * multiplier * stabBonus));
+  let damage = ((power * attackerAtk / defenderDef) / 2) * multiplier * stabBonus;
+  
+  // 화상(BRN) 상태이고 물리 공격일 경우 데미지 절반 감소
+  if (attackerStatus === 'BRN' && isPhysical) {
+    damage *= 0.5;
+  }
+  
+  return Math.max(1, Math.floor(damage));
 };
 
 /**

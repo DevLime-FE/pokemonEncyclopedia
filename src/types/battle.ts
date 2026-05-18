@@ -1,7 +1,16 @@
 import { MoveDetails, Pokemon, PokemonSpecies } from "./pokemon";
 
 export type Turn = 'player1' | 'player2';
-export type StatusEffect = 'poison' | null;
+export type MajorStatus = 'PAR' | 'BRN' | 'SLP' | 'PSN' | 'TOX' | 'FRZ' | null;
+
+export interface VolatileStatus {
+  confusionTurns: number;
+  flinch: boolean;
+  infatuation: boolean;
+  curse: boolean;
+  sleepTurns: number;
+  toxTurns: number;
+}
 
 export interface BattleState {
   logs: string[];
@@ -16,7 +25,8 @@ export interface BattleState {
   currentTurn: Turn;
   isProcessing: boolean;
   damageEffect: 'p1' | 'p2' | null;
-  playerStatus: StatusEffect;
-  opponentStatus: StatusEffect;
+  playerStatus: MajorStatus;
+  opponentStatus: MajorStatus;
+  playerVolatile: VolatileStatus;
+  opponentVolatile: VolatileStatus;
 }
-

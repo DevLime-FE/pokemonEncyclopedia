@@ -44,6 +44,7 @@ export default function RegionPage() {
 
   const [entries, setEntries] = useState<PokedexEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [localizedNames, setLocalizedNames] = useState<Record<string, string>>({});
   const [pokemonSearchTerm, setPokemonSearchTerm] = useState('');
 
@@ -82,12 +83,28 @@ export default function RegionPage() {
         setEntries(data.pokemon_entries);
 
         const nameMap: Record<string, string> = {};
-        await Promise.all(data.pokemon_entries.slice(0, 50).map(async (entry: any) => {
-          const res = await fetch(entry.pokemon_species.url);
-          const speciesData = await res.json();
-          const nameObj = speciesData.names.find((n: any) => n.language.name === (i18n.language === 'ko' ? 'ko' : 'en'));
-          nameMap[entry.pokemon_species.name] = nameObj ? nameObj.name : entry.pokemon_species.name;
-        }));
+        const total = data.pokemon_entries.length;
+        let completed = 0;
+
+        const chunkSize = 20;
+        for (let i = 0; i < total; i += chunkSize) {
+          const chunk = data.pokemon_entries.slice(i, i + chunkSize);
+          await Promise.all(chunk.map(async (entry: any) => {
+            try {
+              const res = await fetch(entry.pokemon_species.url);
+              const speciesData = await res.json();
+              const nameObj = speciesData.names.find((n: any) => n.language.name === (i18n.language === 'ko' ? 'ko' : 'en'));
+              nameMap[entry.pokemon_species.name] = nameObj ? nameObj.name : entry.pokemon_species.name;
+            } catch (e) {
+              console.error(e);
+            } finally {
+              completed++;
+              setLoadingProgress(Math.floor((completed / total) * 100));
+            }
+          }));
+          // 브라우저 렌더링(Progress Bar UI 갱신)을 위해 메인 스레드에 휴식 부여
+          await new Promise(resolve => setTimeout(resolve, 30));
+        }
         setLocalizedNames(prev => ({ ...prev, ...nameMap }));
       } catch (error) {
         console.error('Error fetching Pokedex:', error);
@@ -277,9 +294,26 @@ export default function RegionPage() {
         {/* 중앙 그리드 */}
         <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar relative">
           {loading ? (
-            <div className="h-full flex flex-col items-center justify-center gap-6">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm font-mono text-white/40 uppercase font-black tracking-[0.5em] animate-pulse">Syncing...</p>
+            <div className="h-full flex flex-col items-center justify-center gap-8 relative z-50">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 animate-spin" style={{ animationDuration: '1.5s' }}>
+                <div className="w-full h-full rounded-full border-[6px] border-black bg-gradient-to-b from-red-500 from-50% to-white to-50% flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(239,68,68,0.5)]">
+                  <div className="w-full h-3 sm:h-4 bg-black absolute top-1/2 -translate-y-1/2"></div>
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white border-[5px] sm:border-[6px] border-black rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center z-10">
+                    <div className="w-2.5 h-2.5 sm:w-4 sm:h-4 bg-red-500 border-2 border-black rounded-full animate-pulse shadow-[0_0_10px_#ef4444]"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col items-center w-64 sm:w-80 gap-3">
+                <div className="flex justify-between w-full px-2">
+                  <p className="text-xs sm:text-sm font-mono text-white uppercase font-black tracking-[0.2em] animate-pulse">Syncing Data...</p>
+                  <p className="text-xs sm:text-sm font-mono text-blue-400 font-black">{loadingProgress}%</p>
+                </div>
+                <div className="w-full bg-black/60 border border-white/20 rounded-full h-4 sm:h-5 overflow-hidden shadow-inner p-0.5 sm:p-1">
+                  <div className="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300 ease-out rounded-full relative overflow-hidden" style={{ width: `${loadingProgress}%` }}>
+                     <div className="absolute inset-0 w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-stripe-scroll"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className={`grid gap-3 sm:gap-4 transition-all duration-700 ${(selectedPlayer && selectedOpponent) ? 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5' : (selectedPlayer || selectedOpponent) ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-7' : 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10'}`}>
@@ -397,6 +431,8 @@ export default function RegionPage() {
         .animate-float { animation: float 3s ease-in-out infinite; }
         @keyframes ken-burns { 0% { transform: scale(1); } 100% { transform: scale(1.1) translate(1%, 1%); } }
         .animate-ken-burns { animation: ken-burns 20s linear infinite alternate; }
+        @keyframes stripe-scroll { 0% { background-position: 0 0; } 100% { background-position: 20px 0; } }
+        .animate-stripe-scroll { animation: stripe-scroll 1s linear infinite; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }

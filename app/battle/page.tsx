@@ -8,7 +8,7 @@ import { getRandomMoves, getPokemonSpecies, getFixedMovesDetailsByNames } from '
 import { typeThemes } from '@/src/constants/pokemonData';
 import { getMultiplier, calculateDamage, getStatValue, getHpPercentage, getHpColor } from '@/src/utils/battleUtils';
 import { MoveDetails, PokemonSpecies } from '@/src/types/pokemon';
-import { Turn, StatusEffect } from '@/src/types/battle';
+import { Turn, MajorStatus, VolatileStatus } from '@/src/types/battle';
 
 
 export default function BattlePage() {
@@ -37,8 +37,10 @@ export default function BattlePage() {
   const [hitFlash, setHitFlash] = useState<'p1' | 'p2' | null>(null);
   const [lastMultiplier, setLastMultiplier] = useState<number>(1);
 
-  const [playerStatus, setPlayerStatus] = useState<StatusEffect>(null);
-  const [oppStatus, setOppStatus] = useState<StatusEffect>(null);
+  const [playerStatus, setPlayerStatus] = useState<MajorStatus>(null);
+  const [oppStatus, setOppStatus] = useState<MajorStatus>(null);
+  const [playerVolatile, setPlayerVolatile] = useState<VolatileStatus>({ confusionTurns: 0, flinch: false, infatuation: false, curse: false, sleepTurns: 0, toxTurns: 0 });
+  const [oppVolatile, setOppVolatile] = useState<VolatileStatus>({ confusionTurns: 0, flinch: false, infatuation: false, curse: false, sleepTurns: 0, toxTurns: 0 });
   const [fainting, setFainting] = useState<'p1' | 'p2' | null>(null);
   const [winner, setWinner] = useState<{ player: string; pokemon: string } | null>(null);
 
@@ -119,7 +121,136 @@ export default function BattlePage() {
     const defenderDef = getStatValue(defender, 'defense') || 10;
     const moveName = getLocalizedMoveName(move);
     const attackerName = getLocalizedName(attackerSpecies, attacker.name);
+    const defenderName = getLocalizedName(defenderSpecies, defender.name);
 
+    const attackerStatus = isPlayer1 ? playerStatus : oppStatus;
+    const defenderStatus = isPlayer1 ? oppStatus : playerStatus;
+    const attackerVolatile = isPlayer1 ? playerVolatile : oppVolatile;
+    const setAttackerVolatile = isPlayer1 ? setPlayerVolatile : setOppVolatile;
+    const setDefenderVolatile = isPlayer1 ? setOppVolatile : setPlayerVolatile;
+    const setAttackerStatus = isPlayer1 ? setPlayerStatus : setOppStatus;
+    const setDefenderStatus = isPlayer1 ? setOppStatus : setPlayerStatus;
+    
+    const maxAttackerHp = (getStatValue(attacker, 'hp') || 50) * 3;
+    const maxDefenderHp = (getStatValue(defender, 'hp') || 50) * 3;
+
+    const endTurn = () => {
+      setCurrentTurn(isPlayer1 ? 'player2' : 'player1');
+      setIsProcessing(false);
+    };
+
+    const handleFaint = async (faintedPlayer: 'p1'|'p2', faintedPokemon: any, species: any, winnerLabel: string) => {
+      setFainting(faintedPlayer);
+      await wait(1500);
+      const winName = getLocalizedName(faintedPlayer === 'p1' ? opponentSpecies : playerSpecies, faintedPlayer === 'p1' ? opponentPokemon!.name : playerPokemon!.name);
+      setWinner({ player: winnerLabel, pokemon: winName });
+      setLogs(prev => [...prev, t('{{name}} fainted! {{winner}} wins!', { name: getLocalizedName(species, faintedPokemon.name), winner: winnerLabel })]);
+      setBattleOver(true);
+      setIsProcessing(false);
+      setDamageEffect(null);
+    };
+
+    // ==========================================
+    // PHASE 1: PRE-ATTACK CHECKS
+    // ==========================================
+    
+    // 1. Flinch (풀죽음)
+    if (attackerVolatile.flinch) {
+      setAttackerVolatile(prev => ({ ...prev, flinch: false }));
+      setLogs(prev => [...prev, t('{{name}} flinched and couldn\'t move!', { name: attackerName })]);
+      await wait(1500);
+      return endTurn();
+    }
+
+    // 2. Freeze (얼음)
+    if (attackerStatus === 'FRZ') {
+      if (Math.random() <= 0.2) {
+        setAttackerStatus(null);
+        setLogs(prev => [...prev, t('{{name}} thawed out!', { name: attackerName })]);
+        await wait(1000);
+      } else {
+        setLogs(prev => [...prev, t('{{name}} is frozen solid!', { name: attackerName })]);
+        await wait(1500);
+        return endTurn();
+      }
+    }
+
+    // 3. Sleep (수면)
+    if (attackerStatus === 'SLP') {
+      if (attackerVolatile.sleepTurns <= 0) {
+        setAttackerStatus(null);
+        setLogs(prev => [...prev, t('{{name}} woke up!', { name: attackerName })]);
+        await wait(1000);
+      } else {
+        setAttackerVolatile(prev => ({ ...prev, sleepTurns: prev.sleepTurns - 1 }));
+        setLogs(prev => [...prev, t('{{name}} is fast asleep.', { name: attackerName })]);
+        await wait(1500);
+        return endTurn();
+      }
+    }
+
+    // 4. Paralysis (마비)
+    if (attackerStatus === 'PAR') {
+      if (Math.random() <= 0.25) {
+        setLogs(prev => [...prev, t('{{name}} is paralyzed! It can\'t move!', { name: attackerName })]);
+        await wait(1500);
+        return endTurn();
+      }
+    }
+
+    // 5. Confusion (혼란)
+    let skipMove = false;
+    if (attackerVolatile.confusionTurns > 0) {
+      setAttackerVolatile(prev => ({ ...prev, confusionTurns: prev.confusionTurns - 1 }));
+      setLogs(prev => [...prev, t('{{name}} is confused!', { name: attackerName })]);
+      await wait(1000);
+      
+      if (attackerVolatile.confusionTurns - 1 <= 0) {
+        setLogs(prev => [...prev, t('{{name}} snapped out of confusion!', { name: attackerName })]);
+        await wait(1000);
+      } else {
+        if (Math.random() <= 0.33) {
+          setLogs(prev => [...prev, t('It hurt itself in its confusion!', { name: attackerName })]);
+          setAttackAnim(isPlayer1 ? 'p1' : 'p2');
+          await wait(200);
+          setHitFlash(isPlayer1 ? 'p1' : 'p2');
+          setDamageEffect(isPlayer1 ? 'p1' : 'p2');
+          
+          const selfDamage = calculateDamage(40, attackerAtk, getStatValue(attacker, 'defense') || 10, 1, false, attackerStatus, true);
+          setHitDamage({ value: selfDamage, type: isPlayer1 ? 'p1' : 'p2' });
+          
+          if (isPlayer1) {
+            const newHp = Math.max(0, playerHp - selfDamage);
+            setPlayerHp(newHp);
+            if (newHp <= 0) return handleFaint('p1', attacker, attackerSpecies, 'PLAYER 2');
+          } else {
+            const newHp = Math.max(0, oppHp - selfDamage);
+            setOppHp(newHp);
+            if (newHp <= 0) return handleFaint('p2', attacker, attackerSpecies, 'PLAYER 1');
+          }
+          await wait(800);
+          setHitFlash(null);
+          setDamageEffect(null);
+          skipMove = true;
+        }
+      }
+    }
+    if (skipMove) return endTurn();
+
+    // 6. Infatuation (헤롱헤롱)
+    if (attackerVolatile.infatuation) {
+      if (Math.random() <= 0.5) {
+        setLogs(prev => [...prev, t('{{name}} is immobilized by love!', { name: attackerName })]);
+        await wait(1500);
+        return endTurn();
+      }
+    }
+
+    // ==========================================
+    // PHASE 2: MOVE EXECUTION
+    // ==========================================
+    
+    // Easter Eggs
     if (attacker.name === 'magikarp' && move.name === 'splash') {
       setAttackAnim(isPlayer1 ? 'p1' : 'p2');
       await wait(200);
@@ -129,55 +260,32 @@ export default function BattlePage() {
       setLogs(prev => [...prev, t("But nothing happened...")]);
       await wait(1000);
 
-      // Evolution check: 5% chance
-      if (Math.random() <= 0.05) {
+      if (Math.random() <= 1.00) {
         setLogs(prev => [...prev, t('What? {{name}} is evolving!', { name: attackerName })]);
         await wait(1500);
-        
         setFlashColor('#ffffff');
         await wait(500);
-        
         try {
           const gyaradosRes = await fetch('https://pokeapi.co/api/v2/pokemon/gyarados');
           const newGyarados = await gyaradosRes.json();
           const gyaradosSpeciesRes = await fetch('https://pokeapi.co/api/v2/pokemon-species/gyarados');
           const newGyaradosSpecies = await gyaradosSpeciesRes.json();
-          
-          const isShiny = Math.random() <= 0.1;
-          if (isShiny) {
-             newGyarados.sprites.front_default = newGyarados.sprites.front_shiny;
-          }
-          
+          if (Math.random() <= 0.1) newGyarados.sprites.front_default = newGyarados.sprites.front_shiny;
           const evolvedName = getLocalizedName(newGyaradosSpecies, 'gyarados');
-          
           const newMoves = await getFixedMovesDetailsByNames(['dragon-dance', 'waterfall', 'ice-fang', 'earthquake']);
-          
           if (isPlayer1) {
-             setPlayerPokemon(newGyarados);
-             setPlayerSpecies(newGyaradosSpecies);
-             setPlayerMoves(newMoves);
-             const currentPHp = newGyarados.stats.find((s: any) => s.stat.name === 'hp')?.base_stat || 95;
-             setPlayerHp(currentPHp * 3);
+             setPlayerPokemon(newGyarados); setPlayerSpecies(newGyaradosSpecies); setPlayerMoves(newMoves);
+             setPlayerHp((newGyarados.stats.find((s: any) => s.stat.name === 'hp')?.base_stat || 95) * 3);
           } else {
-             setOpponentPokemon(newGyarados);
-             setOpponentSpecies(newGyaradosSpecies);
-             setOpponentMoves(newMoves);
-             const currentOHp = newGyarados.stats.find((s: any) => s.stat.name === 'hp')?.base_stat || 95;
-             setOppHp(currentOHp * 3);
+             setOpponentPokemon(newGyarados); setOpponentSpecies(newGyaradosSpecies); setOpponentMoves(newMoves);
+             setOppHp((newGyarados.stats.find((s: any) => s.stat.name === 'hp')?.base_stat || 95) * 3);
           }
-          
           setFlashColor(null);
           setLogs(prev => [...prev, t('Congratulations! {{name}} evolved into {{evolvedName}}!', { name: attackerName, evolvedName })]);
           await wait(1500);
-        } catch (error) {
-          console.error("Evolution failed:", error);
-          setFlashColor(null);
-        }
+        } catch (error) { setFlashColor(null); }
       }
-
-      setCurrentTurn(isPlayer1 ? 'player2' : 'player1');
-      setIsProcessing(false);
-      return;
+      return endTurn();
     }
 
     if (move.name === 'dragon-dance') {
@@ -186,138 +294,208 @@ export default function BattlePage() {
       await wait(400);
       setLogs(prev => [...prev, t('{{name}} used {{move}}!', { name: attackerName, move: moveName })]);
       await wait(600);
-      setFlashColor(null);
-      setAttackAnim(null);
+      setFlashColor(null); setAttackAnim(null);
       setLogs(prev => [...prev, t("{{name}}'s Attack and Speed rose!", { name: attackerName })]);
       await wait(1000);
-      setCurrentTurn(isPlayer1 ? 'player2' : 'player1');
-      setIsProcessing(false);
-      return;
+      return endTurn();
     }
 
-    // 공격 타입에 따른 모션 결정
+    // Determine move category (Status vs Attack)
+    const isStatusMove = move.power === null || move.power === 0 || move.damage_class?.name === 'status';
     const physicalTypes = ['normal', 'fighting', 'poison', 'ground', 'rock', 'bug', 'ghost', 'steel', 'flying'];
-    const currentMotion = physicalTypes.includes(move.type.name) ? 'physical' : 'special';
-    setMotionType(currentMotion);
+    const isPhysical = move.damage_class?.name === 'physical' || physicalTypes.includes(move.type.name);
+    setMotionType(isPhysical ? 'physical' : 'special');
 
-    // 1. 공격 돌진 시작
+    // Attack Animation
     setAttackAnim(isPlayer1 ? 'p1' : 'p2');
     setFlashColor(typeThemes[move.type.name]?.neon || '#fff');
     await wait(200);
 
-    // 2. 타격 순간 (플래시 + 진동 + 데미지 팝업)
-    const power = move.power || 50;
-    const isStab = attacker.types.some(t => t.type.name === move.type.name);
-    const multiplier = getMultiplier(move.type.name, defender.types.map(t => t.type.name));
-    setLastMultiplier(multiplier);
-    const damage = calculateDamage(power, attackerAtk, defenderDef, multiplier, isStab);
-
-    setHitFlash(isPlayer1 ? 'p2' : 'p1');
-    setDamageEffect(isPlayer1 ? 'p2' : 'p1');
-    setHitDamage({ value: damage, type: isPlayer1 ? 'p2' : 'p1' });
-
-    await wait(100);
-    setFlashColor(null);
-    setHitFlash(null); // 플래시는 짧게 종료
-
-    await wait(100);
-    setAttackAnim(null); // 공격자 복귀
-
-    // 데미지 숫자 제거 타이밍
-    setTimeout(() => setHitDamage(null), 800);
-
     setLogs(prev => [...prev, t('{{name}} used {{move}}!', { name: attackerName, move: moveName })]);
-
-    await wait(800);
-
-    // 독 걸릴 확률 
-    if (move.type.name === 'poison' && multiplier > 0.6) {
-      if (isPlayer1 && !oppStatus && !opponentPokemon?.types.some(t => t.type.name === 'poison' || t.type.name === 'steel')) {
-        setOppStatus('poison');
-        setLogs(prev => [...prev, t('{{name}} was poisoned!', { name: getLocalizedName(opponentSpecies, opponentPokemon?.name || '') })]);
-        await wait(600);
-      } else if (!isPlayer1 && !playerStatus && !playerPokemon?.types.some(t => t.type.name === 'poison' || t.type.name === 'steel')) {
-        setPlayerStatus('poison');
-        setLogs(prev => [...prev, t('{{name}} was poisoned!', { name: getLocalizedName(playerSpecies, playerPokemon?.name || '') })]);
-        await wait(600);
-      }
-    }
-
-
-    if (isPlayer1) {
-      const newHp = Math.max(0, oppHp - damage);
-      setOppHp(newHp);
-      if (multiplier > 1) setLogs(prev => [...prev, t("It's super effective!")]);
-      else if (multiplier < 1 && multiplier > 0) setLogs(prev => [...prev, t("It's not very effective...")]);
-      else if (multiplier === 0) setLogs(prev => [...prev, t("It had no effect!")]);
-      if (multiplier !== 1) await wait(600);
-      setLogs(prev => [...prev, t('Dealt {{damage}} damage!', { damage })]);
-      if (newHp <= 0) {
-        setFainting('p2');
-        await wait(1500);
-        const winName = getLocalizedName(playerSpecies, playerPokemon!.name);
-        setWinner({ player: '1 PLAYER', pokemon: winName });
-        setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: getLocalizedName(defenderSpecies, defender.name) })]);
-        setBattleOver(true); setIsProcessing(false); setDamageEffect(null); return;
-      }
-    } else {
-      const newHp = Math.max(0, playerHp - damage);
-      setPlayerHp(newHp);
-      if (multiplier > 1) setLogs(prev => [...prev, t("It's super effective!")]);
-      else if (multiplier < 1 && multiplier > 0) setLogs(prev => [...prev, t("It's not very effective...")]);
-      else if (multiplier === 0) setLogs(prev => [...prev, t("It had no effect!")]);
-      if (multiplier !== 1) await wait(600);
-      setLogs(prev => [...prev, t('Dealt {{damage}} damage!', { damage })]);
-      if (newHp <= 0) {
-        setFainting('p1');
-        await wait(1500);
-        const winName = getLocalizedName(opponentSpecies, opponentPokemon!.name);
-        setWinner({ player: '2 PLAYER', pokemon: winName });
-        setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: getLocalizedName(defenderSpecies, defender.name) })]);
-        setBattleOver(true); setIsProcessing(false); setDamageEffect(null); return;
-      }
-    }
-
-    await wait(600);
-    setDamageEffect(null);
     await wait(400);
 
-    const maxPlayerHp = (getStatValue(playerPokemon, 'hp') || 50) * 3;
-    const maxOppHp = (getStatValue(opponentPokemon, 'hp') || 50) * 3;
-    const attackerStatus = isPlayer1 ? playerStatus : oppStatus;
-    if (attackerStatus === 'poison') {
-      const dotDamage = Math.floor((isPlayer1 ? maxPlayerHp : maxOppHp) / 8);
-      if (isPlayer1) {
-        const nextHp = Math.max(0, playerHp - dotDamage);
-        setPlayerHp(nextHp);
-        setLogs(prev => [...prev, t('{{name}} is hurt by poison!', { name: getLocalizedName(playerSpecies, playerPokemon?.name || '') })]);
-        if (nextHp <= 0) {
-          setFainting('p1');
-          await wait(1500);
-          const winName = getLocalizedName(opponentSpecies, opponentPokemon!.name);
-          setWinner({ player: '2PLAYER', pokemon: winName });
-          setLogs(prev => [...prev, t('{{name}} fainted! Player 2 wins!', { name: getLocalizedName(playerSpecies, playerPokemon?.name || '') })]);
-          setBattleOver(true); setIsProcessing(false); return;
+    // Damage application
+    if (!isStatusMove) {
+      const power = move.power || 50;
+      const isStab = attacker.types.some(t => t.type.name === move.type.name);
+      const multiplier = getMultiplier(move.type.name, defender.types.map(t => t.type.name));
+      setLastMultiplier(multiplier);
+      
+      const damage = calculateDamage(power, attackerAtk, defenderDef, multiplier, isStab, attackerStatus, isPhysical);
+
+      if (multiplier > 0) {
+        setHitFlash(isPlayer1 ? 'p2' : 'p1');
+        setDamageEffect(isPlayer1 ? 'p2' : 'p1');
+        setHitDamage({ value: damage, type: isPlayer1 ? 'p2' : 'p1' });
+
+        if (defenderStatus === 'FRZ' && move.type.name === 'fire') {
+          setDefenderStatus(null);
+          setLogs(prev => [...prev, t('{{name}} thawed out!', { name: defenderName })]);
+        }
+
+        if (isPlayer1) {
+          const newHp = Math.max(0, oppHp - damage);
+          setOppHp(newHp);
+          if (multiplier > 1) setLogs(prev => [...prev, t("It's super effective!")]);
+          else if (multiplier < 1) setLogs(prev => [...prev, t("It's not very effective...")]);
+          await wait(600);
+          setLogs(prev => [...prev, t('Dealt {{damage}} damage!', { damage })]);
+          if (newHp <= 0) return handleFaint('p2', defender, defenderSpecies, 'PLAYER 1');
+        } else {
+          const newHp = Math.max(0, playerHp - damage);
+          setPlayerHp(newHp);
+          if (multiplier > 1) setLogs(prev => [...prev, t("It's super effective!")]);
+          else if (multiplier < 1) setLogs(prev => [...prev, t("It's not very effective...")]);
+          await wait(600);
+          setLogs(prev => [...prev, t('Dealt {{damage}} damage!', { damage })]);
+          if (newHp <= 0) return handleFaint('p1', defender, defenderSpecies, 'PLAYER 2');
+        }
+
+        await wait(200);
+        setHitFlash(null);
+        await wait(200);
+        setDamageEffect(null);
+        setTimeout(() => setHitDamage(null), 800);
+        
+        // Attack Secondary Effects (Probabilities)
+        const applyEffect = async (status: MajorStatus, msg: string, applyCheck: boolean) => {
+          if (!defenderStatus && applyCheck) {
+            setDefenderStatus(status);
+            if (status === 'TOX') setDefenderVolatile(prev => ({ ...prev, toxTurns: 1 }));
+            setLogs(prev => [...prev, t(msg, { name: defenderName })]);
+            await wait(1000);
+          }
+        };
+
+        if (['thunderbolt', 'thunder', 'discharge'].includes(move.name) && Math.random() <= 0.1) {
+          await applyEffect('PAR', '{{name}} is paralyzed! It may be unable to move!', !defender.types.some(t => t.type.name === 'electric'));
+        }
+        if (['flamethrower', 'fire-blast', 'heat-wave'].includes(move.name) && Math.random() <= 0.1) {
+          await applyEffect('BRN', '{{name}} was burned!', !defender.types.some(t => t.type.name === 'fire'));
+        }
+        if (move.name === 'scald' && Math.random() <= 0.3) {
+          await applyEffect('BRN', '{{name}} was burned!', !defender.types.some(t => t.type.name === 'fire'));
+        }
+        if (['sludge-bomb', 'sludge-wave', 'poison-jab'].includes(move.name) && Math.random() <= 0.3) {
+          await applyEffect('PSN', '{{name}} was poisoned!', !defender.types.some(t => ['poison', 'steel'].includes(t.type.name)));
+        }
+        if (['ice-beam', 'blizzard', 'ice-fang', 'ice-punch'].includes(move.name) && Math.random() <= 0.1) {
+          await applyEffect('FRZ', '{{name}} was frozen solid!', !defender.types.some(t => t.type.name === 'ice'));
+        }
+        if (['rock-slide', 'waterfall', 'iron-head', 'air-slash', 'dark-pulse'].includes(move.name) && Math.random() <= 0.3) {
+          setDefenderVolatile(prev => ({ ...prev, flinch: true }));
+        }
+        if (move.name === 'fake-out') {
+          setDefenderVolatile(prev => ({ ...prev, flinch: true }));
         }
       } else {
-        const nextHp = Math.max(0, oppHp - dotDamage);
-        setOppHp(nextHp);
-        setLogs(prev => [...prev, t('{{name}} is hurt by poison!', { name: getLocalizedName(opponentSpecies, opponentPokemon?.name || '') })]);
-        if (nextHp <= 0) {
-          setFainting('p2');
-          await wait(1500);
-          const winName = getLocalizedName(playerSpecies, playerPokemon!.name);
-          setWinner({ player: '1PLAYER', pokemon: winName });
-          setLogs(prev => [...prev, t('Opponent {{name}} fainted! Player 1 wins!', { name: getLocalizedName(opponentSpecies, opponentPokemon?.name || '') })]);
-          setBattleOver(true); setIsProcessing(false); return;
-        }
+        setLogs(prev => [...prev, t("It had no effect!")]);
+        await wait(1000);
       }
-
+    } else {
+      // Status Move Execution
       await wait(800);
+      const applyStatus = async (status: MajorStatus, msg: string, applyCheck: boolean) => {
+        if (!defenderStatus && applyCheck) {
+          setDefenderStatus(status);
+          if (status === 'SLP') setDefenderVolatile(prev => ({ ...prev, sleepTurns: Math.floor(Math.random() * 3) + 1 }));
+          if (status === 'TOX') setDefenderVolatile(prev => ({ ...prev, toxTurns: 1 }));
+          setLogs(prev => [...prev, t(msg, { name: defenderName })]);
+        } else if (!applyCheck) {
+          setLogs(prev => [...prev, t('It doesn\'t affect {{name}}...', { name: defenderName })]);
+        } else {
+          setLogs(prev => [...prev, t('{{name}} is already affected by a status condition!', { name: defenderName })]);
+        }
+        await wait(1500);
+      };
+
+      if (['thunder-wave', 'glare', 'stun-spore'].includes(move.name)) {
+        await applyStatus('PAR', '{{name}} is paralyzed! It may be unable to move!', move.name === 'thunder-wave' ? !defender.types.some(t => t.type.name === 'electric') : true);
+      } else if (['will-o-wisp'].includes(move.name)) {
+        await applyStatus('BRN', '{{name}} was burned!', !defender.types.some(t => t.type.name === 'fire'));
+      } else if (['toxic'].includes(move.name)) {
+        await applyStatus('TOX', '{{name}} was badly poisoned!', !defender.types.some(t => ['poison', 'steel'].includes(t.type.name)));
+      } else if (['poison-powder'].includes(move.name)) {
+        await applyStatus('PSN', '{{name}} was poisoned!', !defender.types.some(t => ['poison', 'steel'].includes(t.type.name)));
+      } else if (['spore', 'hypnosis', 'yawn', 'dark-void', 'sing'].includes(move.name)) {
+        await applyStatus('SLP', '{{name}} fell asleep!', true);
+      } else if (['confuse-ray', 'swagger', 'sweet-kiss'].includes(move.name)) {
+        if (defenderVolatile.confusionTurns === 0) {
+          setDefenderVolatile(prev => ({ ...prev, confusionTurns: Math.floor(Math.random() * 4) + 1 }));
+          setLogs(prev => [...prev, t('{{name}} became confused!', { name: defenderName })]);
+        } else {
+           setLogs(prev => [...prev, t('{{name}} is already confused!', { name: defenderName })]);
+        }
+        await wait(1500);
+      } else if (['captivate', 'attract'].includes(move.name)) {
+        if (!defenderVolatile.infatuation) {
+          setDefenderVolatile(prev => ({ ...prev, infatuation: true }));
+          setLogs(prev => [...prev, t('{{name}} fell in love!', { name: defenderName })]);
+        } else {
+           setLogs(prev => [...prev, t('{{name}} is already in love!', { name: defenderName })]);
+        }
+        await wait(1500);
+      } else if (['curse'].includes(move.name) && attacker.types.some(t => t.type.name === 'ghost')) {
+        // Ghost type curse: Lose half HP, target is cursed
+        const selfDmg = Math.floor(maxAttackerHp / 2);
+        if (isPlayer1) { setPlayerHp(Math.max(0, playerHp - selfDmg)); } else { setOppHp(Math.max(0, oppHp - selfDmg)); }
+        setDefenderVolatile(prev => ({ ...prev, curse: true }));
+        setLogs(prev => [...prev, t('{{name}} cut its own HP and laid a curse on {{target}}!', { name: attackerName, target: defenderName })]);
+        await wait(1500);
+        if ((isPlayer1 ? playerHp - selfDmg : oppHp - selfDmg) <= 0) {
+           return handleFaint(isPlayer1 ? 'p1' : 'p2', attacker, attackerSpecies, isPlayer1 ? 'PLAYER 2' : 'PLAYER 1');
+        }
+      } else {
+        setLogs(prev => [...prev, t("But it failed!")]);
+        await wait(1000);
+      }
     }
 
-    setCurrentTurn(isPlayer1 ? 'player2' : 'player1');
-    setIsProcessing(false);
+    setFlashColor(null);
+    setAttackAnim(null);
+    await wait(600);
+
+    // ==========================================
+    // PHASE 3: POST-ATTACK DOTS
+    // ==========================================
+    const applyDot = async (playerKey: 'p1'|'p2', dmgFn: (maxHp: number) => number, msg: string) => {
+       const isP1 = playerKey === 'p1';
+       const pMon = isP1 ? playerPokemon : opponentPokemon;
+       const pSpec = isP1 ? playerSpecies : opponentSpecies;
+       const maxHp = (getStatValue(pMon, 'hp') || 50) * 3;
+       const dmg = dmgFn(maxHp);
+       
+       if (isP1) {
+         const nextHp = Math.max(0, playerHp - dmg);
+         setPlayerHp(nextHp);
+         setLogs(prev => [...prev, t(msg, { name: getLocalizedName(pSpec, pMon!.name) })]);
+         await wait(1000);
+         if (nextHp <= 0) { await handleFaint('p1', pMon, pSpec, 'PLAYER 2'); return true; }
+       } else {
+         const nextHp = Math.max(0, oppHp - dmg);
+         setOppHp(nextHp);
+         setLogs(prev => [...prev, t(msg, { name: getLocalizedName(pSpec, pMon!.name) })]);
+         await wait(1000);
+         if (nextHp <= 0) { await handleFaint('p2', pMon, pSpec, 'PLAYER 1'); return true; }
+       }
+       return false;
+    };
+
+    if (attackerStatus === 'BRN') {
+       if (await applyDot(isPlayer1 ? 'p1' : 'p2', max => Math.floor(max / 16), '{{name}} is hurt by its burn!')) return;
+    } else if (attackerStatus === 'PSN') {
+       if (await applyDot(isPlayer1 ? 'p1' : 'p2', max => Math.floor(max / 8), '{{name}} is hurt by poison!')) return;
+    } else if (attackerStatus === 'TOX') {
+       const mult = attackerVolatile.toxTurns;
+       if (await applyDot(isPlayer1 ? 'p1' : 'p2', max => Math.floor((max * mult) / 16), '{{name}} is hurt by bad poison!')) return;
+       setAttackerVolatile(prev => ({ ...prev, toxTurns: prev.toxTurns + 1 }));
+    }
+    
+    if (attackerVolatile.curse) {
+       if (await applyDot(isPlayer1 ? 'p1' : 'p2', max => Math.floor(max / 4), '{{name}} is afflicted by the curse!')) return;
+    }
+
+    endTurn();
   };
 
   if (!playerPokemon || !opponentPokemon) return null;
@@ -381,7 +559,15 @@ export default function BattlePage() {
               <div className="flex justify-between items-end mb-1 sm:mb-2 border-b border-white/5 pb-1">
                 <div className="flex items-center gap-1.5 overflow-hidden">
                   <span className="font-mono font-black text-xs sm:text-lg uppercase text-white tracking-tighter truncate max-w-[120px]">{getLocalizedName(opponentSpecies, opponentPokemon.name)}</span>
-                  {oppStatus === 'poison' && <span className="bg-purple-600 text-white text-[6px] sm:text-[8px] font-black px-1 rounded border border-purple-400 animate-pulse">PSN</span>}
+                  {oppStatus && (
+                    <span className={`text-white text-[6px] sm:text-[8px] font-black px-1 rounded border animate-pulse ${
+                      oppStatus === 'BRN' ? 'bg-red-600 border-red-400' :
+                      oppStatus === 'PAR' ? 'bg-yellow-500 border-yellow-300' :
+                      oppStatus === 'SLP' ? 'bg-gray-500 border-gray-300' :
+                      oppStatus === 'FRZ' ? 'bg-cyan-500 border-cyan-300' :
+                      (oppStatus === 'PSN' || oppStatus === 'TOX') ? 'bg-purple-600 border-purple-400' : ''
+                    }`}>{oppStatus}</span>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex gap-1">
@@ -479,7 +665,15 @@ export default function BattlePage() {
               <div className="flex justify-between items-end mb-1 sm:mb-2 border-b border-white/5 pb-1">
                 <div className="flex items-center gap-1.5 overflow-hidden">
                   <span className="font-mono font-black text-xs sm:text-lg uppercase text-white tracking-tighter truncate max-w-[120px]">{getLocalizedName(playerSpecies, playerPokemon.name)}</span>
-                  {playerStatus === 'poison' && <span className="bg-purple-600 text-white text-[7px] sm:text-[10px] font-black px-1.5 rounded border border-purple-400 animate-pulse">PSN</span>}
+                  {playerStatus && (
+                    <span className={`text-white text-[7px] sm:text-[10px] font-black px-1.5 rounded border animate-pulse ${
+                      playerStatus === 'BRN' ? 'bg-red-600 border-red-400' :
+                      playerStatus === 'PAR' ? 'bg-yellow-500 border-yellow-300' :
+                      playerStatus === 'SLP' ? 'bg-gray-500 border-gray-300' :
+                      playerStatus === 'FRZ' ? 'bg-cyan-500 border-cyan-300' :
+                      (playerStatus === 'PSN' || playerStatus === 'TOX') ? 'bg-purple-600 border-purple-400' : ''
+                    }`}>{playerStatus}</span>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex gap-1">
