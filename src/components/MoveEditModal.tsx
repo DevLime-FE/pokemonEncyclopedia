@@ -1,5 +1,5 @@
-import React from 'react';
 import { typeThemes } from '../constants/pokemon';
+import { matchChosung } from '../utils/searchUtils';
 
 interface MoveEditModalProps {
   editingPlayer: 'player1' | 'player2';
@@ -97,7 +97,7 @@ const MoveEditModal = ({
             ) : (
               availableMovesDetails.filter(m => {
                 const name = getLocalizedMoveName(m);
-                return name.toLowerCase().includes(moveSearchTerm.toLowerCase());
+                return matchChosung(name, moveSearchTerm);
               }).map((m: any) => {
                 const isSelected = tempSelectedMoves.find(sm => sm.name === m.name);
                 const typeTheme = typeThemes[m.type.name] || { color: '#555', shadow: 'rgba(0,0,0,0.5)' };

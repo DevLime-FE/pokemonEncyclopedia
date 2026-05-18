@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { typeThemes } from '@/src/constants/pokemon';
+import { matchChosung } from '@/src/utils/searchUtils';
 import PokedexSidePanel from '@/src/components/PokedexSidePanel';
 import MoveEditModal from '@/src/components/MoveEditModal';
 import { useBattle } from '@/src/context/BattleContext';
@@ -319,7 +320,7 @@ export default function RegionPage() {
             <div className={`grid gap-3 sm:gap-4 transition-all duration-700 ${(selectedPlayer && selectedOpponent) ? 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5' : (selectedPlayer || selectedOpponent) ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 xl:grid-cols-7' : 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10'}`}>
               {entries.filter(entry => {
                 const name = localizedNames[entry.pokemon_species.name] || entry.pokemon_species.name;
-                return name.toLowerCase().includes(pokemonSearchTerm.toLowerCase());
+                return matchChosung(name, pokemonSearchTerm);
               }).map((entry, idx) => {
                 const id = entry.pokemon_species.url.split('/').filter(Boolean).pop();
                 const isP1 = selectedPlayer?.name === entry.pokemon_species.name;
